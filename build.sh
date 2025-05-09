@@ -5,7 +5,7 @@ set -euo pipefail
 APP_NAME="Conquest"
 
 # Your repo root
-PROJECT_DIR="$HOME/projects/rogueLike"
+PROJECT_DIR="$(git rev-parse --show-toplevel)"
 
 # SDL2 core
 SDL2_VERSION="2.32.6"
