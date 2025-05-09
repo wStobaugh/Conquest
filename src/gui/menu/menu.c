@@ -43,7 +43,7 @@ Menu *menu_create(SDL_Renderer *ren, int w, int h, const char *font_path) {
     m->win_w = w;
     m->win_h = h;
     m->off_x = 0;
-    m->off_y = 400;
+    m->off_y = h / 5; /* 10% offset for title */
     m->title_font = TTF_OpenFont(font_path, 64);
     m->font = TTF_OpenFont(font_path, 28);
     SDL_Surface *s = TTF_RenderUTF8_Solid(m->title_font, "CONQUEST",

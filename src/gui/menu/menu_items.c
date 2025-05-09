@@ -20,17 +20,21 @@ void menu_build_placeholder(Menu *m, const char *title) {
 // main menu
 void menu_build_main(Menu *m) {
     menu_clear_buttons(m);
-    menu_add_button(m, "Continue", "goto_continue", 250);
-    menu_add_button(m, "New Game", "goto_newgame", 310);
-    menu_add_button(m, "Settings", "goto_settings", 370);
-    menu_add_button(m, "Credits", "goto_credits", 430);
+    int base_y = m->win_h * 0.2;
+    int spacing = 70;
+    menu_add_button(m, "Continue", "goto_continue", base_y);
+    menu_add_button(m, "New Game", "goto_newgame", base_y + spacing);
+    menu_add_button(m, "Settings", "goto_settings", base_y + spacing*2);
+    menu_add_button(m, "Credits", "goto_credits", base_y + spacing*3);
 }
 
 // Continue game
 void menu_build_continue(Menu *m) {
     menu_clear_buttons(m);
-    menu_add_button(m, "Save 1 (DEMO)", "N/A", 250);
-    menu_add_button(m, "Back", "goto_main", 310);
+    int base_y = m->win_h * 0.2;
+    int spacing = 70;
+    menu_add_button(m, "Save 1 (DEMO)", "N/A", base_y);
+    menu_add_button(m, "Back", "goto_main", base_y + spacing);
 }
 
 // New game

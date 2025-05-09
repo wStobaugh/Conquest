@@ -6,7 +6,7 @@ Button button_make(SDL_Renderer *ren, TTF_Font *font, const char *text,
                    const char *signal, int center_x, int y,
                    SDL_Color base_background_color) {
     SDL_Surface *s =
-        TTF_RenderUTF8_Solid(font, text, (SDL_Color){255, 255, 255, 255});
+        TTF_RenderUTF8_Solid(font, text, (SDL_Color){255, 255, 255, base_background_color.a});
     if (!s)
         return (Button){0};
     SDL_Texture *tex = SDL_CreateTextureFromSurface(ren, s);
@@ -44,11 +44,14 @@ int button_hover(Button *b, int mx, int my) {
             clamp(b->base_background_color.g + 50, 0, 255);
         b->current_background_color.b =
             clamp(b->base_background_color.b + 50, 0, 255);
+        b->current_background_color.a =
+            clamp(b->base_background_color.a + 50, 0, 255);
     } else {
         // Reset the color of the button to its original color
         b->current_background_color.r = b->base_background_color.r;
         b->current_background_color.g = b->base_background_color.g;
         b->current_background_color.b = b->base_background_color.b;
+        b->current_background_color.a = b->base_background_color.a;
     }
     // check if the mouse position is within the button box
     return is_hover;
@@ -60,7 +63,8 @@ void button_render(Button *b, SDL_Renderer *ren) {
         ren, b->current_background_color.r, b->current_background_color.g,
         b->current_background_color.b, b->current_background_color.a);
     SDL_RenderFillRect(ren, &b->box);
-    SDL_SetRenderDrawColor(ren, 200, 200, 200, 255);
+    // TODO: Update color
+    SDL_SetRenderDrawColor(ren, 200, 200, 200, b->current_background_color.a);
     SDL_RenderDrawRect(ren, &b->box);
     SDL_Rect txt_dst = {b->box.x + 10, b->box.y + 10, b->box.w - 20,
                         b->box.h - 20};
