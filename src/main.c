@@ -1,5 +1,6 @@
 #include "input/input_manager.h"
 #include "state/state_manager.h"
+#include "game_loop/initialization.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -15,26 +16,11 @@ static const char *font_path() {
 }
 
 int main(int argc, char **argv) {
-    (void)argc;
-    (void)argv;
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        SDL_Log("SDL_Init: %s", SDL_GetError());
-        return 1;
-    }
-    if (TTF_Init() != 0) {
-        SDL_Log("TTF: %s", TTF_GetError());
-        SDL_Quit();
-        return 1;
-    }
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
-        SDL_Log("IMG_Init failed: %s", IMG_GetError());
-        SDL_Quit();
-        return 1;
-    }
+  (void)argc;
+  (void)argv;
 
-    char *base = SDL_GetBasePath(); // e.g. "C:\\Users\\willi\\Conquest\\"
-    _chdir(base);                   // switch CWD there
-    SDL_free(base);
+  // Game loop initialization
+  game_init();
 
     // 1) Create a borderless fullscreen-desktop window (size args are ignored)
     SDL_Window *win = SDL_CreateWindow(

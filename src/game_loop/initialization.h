@@ -1,0 +1,5 @@
+#ifdef GAME_LOOP_INITIALIZATION_H
+#define GAME_LOOP_INITIALIZATION_H
+
+void game_init();
+#endif // GAME_LOOP_INITIALIZATION_H
