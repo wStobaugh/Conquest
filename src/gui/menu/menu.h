@@ -48,4 +48,8 @@ void menu_add_button(Menu *m, const char *label, const char *signal, int y);
 int menu_center_x(Menu *m);
 void menu_get_fonts(Menu *m, void **title_font, void **body_font); /* opaque */
 
+// Input handling
+struct InputManager;                       /* forward-declare */
+void menu_handle_input(Menu *m, const struct InputManager *im);
+
 #endif // CONQUEST_GUI_MENU_H

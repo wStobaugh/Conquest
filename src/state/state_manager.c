@@ -1,4 +1,5 @@
 #include "state_manager.h"
+#include "../input/input_manager.h"
 #include <string.h>
 
 // This is how we initialize a new game state manager.
@@ -8,17 +9,6 @@ StateManager *sm_create(SDL_Renderer *ren, int w, int h,
     sm->state = GS_MENU;
     sm->menu = menu_create(ren, w, h, font_path);
     return sm;
-}
-
-// This function handles events for the state manager.
-void sm_handle_event(StateManager *sm, const SDL_Event *e) {
-    if (sm->state == GS_MENU)
-        menu_handle_event(sm->menu, e);
-    else if (sm->state == GS_PLAY) {
-        // Go back to menu on ESCAPE if we are in the game
-        if (e->type == SDL_KEYDOWN && e->key.keysym.sym == SDLK_ESCAPE)
-            sm->state = GS_MENU; /* simple toggle */
-    }
 }
 
 // This function updates the state manager.
@@ -42,6 +32,18 @@ void sm_render(StateManager *sm, SDL_Renderer *ren) {
         SDL_SetRenderDrawColor(ren, 0, 20, 40, 255);
         SDL_RenderClear(ren);
     }
+}
+
+// This functions handles input events depending on the current state.
+void sm_handle_input(StateManager *sm, const InputManager *im) {
+    if (sm->state == GS_MENU)
+        menu_handle_input(sm->menu, im);
+
+    /* later: add gameplay input here */
+
+    // Pressing ESCAPE in the game state should return to the menu
+    if (sm->state == GS_PLAY && input_pressed(im, ACTION_CANCEL))
+        sm->state = GS_MENU;
 }
 
 // This function destroys the state manager and frees its resources.
