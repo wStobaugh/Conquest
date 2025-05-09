@@ -55,6 +55,7 @@ void input_handle_event(InputManager *im, const SDL_Event *e) {
             set_bit(&im->pressed, a);
         }
     }
+
     if (e->type == SDL_KEYUP) {
         InputAction a = key_to_action(e->key.keysym.scancode);
         if (a != ACTION_NONE) {

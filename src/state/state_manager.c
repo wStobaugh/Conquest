@@ -34,10 +34,16 @@ void sm_render(StateManager *sm, SDL_Renderer *ren) {
     }
 }
 
+// This functions handles input events depending on the current state.
 void sm_handle_input(StateManager *sm, const InputManager *im) {
     if (sm->state == GS_MENU)
         menu_handle_input(sm->menu, im);
+
     /* later: add gameplay input here */
+
+    // Pressing ESCAPE in the game state should return to the menu
+    if (sm->state == GS_PLAY && input_pressed(im, ACTION_CANCEL))
+        sm->state = GS_MENU;
 }
 
 // This function destroys the state manager and frees its resources.

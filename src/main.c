@@ -65,10 +65,7 @@ int main(int argc, char **argv) {
         /* global hot-keys */
         if (input_pressed(im, ACTION_QUIT))
             running = 0;
-        if (sm->state == GS_PLAY && input_pressed(im, ACTION_CANCEL))
-            sm->state = GS_MENU;
-
-        /* ---------- NEW: let the state react to actions ---------------- */
+        /* ---------- let the state react to actions ---------------- */
         sm_handle_input(sm, im);
 
         sm_update(sm);
@@ -91,21 +88,3 @@ int main(int argc, char **argv) {
     SDL_Quit();
     return 0;
 }
-
-/*
-while (running) {
-        Uint32 frame_start = SDL_GetTicks();
-        SDL_Event e;
-        while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT)
-                running = 0;
-            sm_handle_event(sm, &e);
-        }
-        sm_update(sm);
-        sm_render(sm, ren);
-        SDL_RenderPresent(ren);
-        Uint32 dt = SDL_GetTicks() - frame_start;
-        if (dt < target_ms)
-            SDL_Delay(target_ms - dt);
-    }
-*/
