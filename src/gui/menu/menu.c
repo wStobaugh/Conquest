@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "../../input/input_manager.h"
 #include "../../utils/math_utils.h"
 
 /*--------------------------------------------------------------------------*/
@@ -56,25 +57,24 @@ Menu *menu_create(SDL_Renderer *ren, int w, int h, const char *font_path) {
 }
 
 // Here is where we listen to ALL user input events.
-void menu_handle_event(Menu *m, const SDL_Event *e) {
-    // On mouse motion update button hover state
-    if (e->type == SDL_MOUSEMOTION) {
-        int mx = e->motion.x, my = e->motion.y;
-        for (int i = 0; i < m->btn_count; i++)
-            button_hover(&m->buttons[i], mx, my);
-    }
+void menu_handle_input(Menu *m, const InputManager *im) {
+    int mx, my;
+    input_mouse_pos(im, &mx, &my);
 
-    // On click...
-    if (e->type == SDL_MOUSEBUTTONDOWN) {
-        int mx = e->button.x, my = e->button.y;
-        for (int i = 0; i < m->btn_count; i++)
+    /* 1. hover colouring */
+    for (int i = 0; i < m->btn_count; ++i)
+        button_hover(&m->buttons[i], mx, my);
+
+    /* 2. click → fire signal */
+    if (input_pressed(im, ACTION_CONFIRM)) {
+        for (int i = 0; i < m->btn_count; ++i) {
             if (button_hover(&m->buttons[i], mx, my)) {
                 strncpy(m->signal_buf, m->buttons[i].signal,
                         sizeof m->signal_buf);
-                menu_build_from_signal(
-                    m, m->signal_buf); /* helper in menu_items */
-                return;
+                menu_build_from_signal(m, m->signal_buf);
+                break;
             }
+        }
     }
 }
 
