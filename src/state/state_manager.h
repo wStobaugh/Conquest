@@ -16,4 +16,7 @@ void sm_update(StateManager *sm);
 void sm_render(StateManager *sm, SDL_Renderer *ren);
 void sm_destroy(StateManager *sm);
 
+struct InputManager;                       /* forward-declare */
+void sm_handle_input(StateManager *sm, const struct InputManager *im);
+
 #endif // CONQUEST_STATE_MANAGER_H
