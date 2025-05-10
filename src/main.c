@@ -3,6 +3,7 @@
 #include "game_loop/game_loop.h"
 #include "game_loop/initialization.h"
 #include "utils/game_structs.h"
+#include "core/cursor/cursor.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -59,6 +60,7 @@ int main(int argc, char **argv) {
     }
     /* shutdown */
 
+    cursor_cleanup();
     input_destroy(im);
     sm_destroy(sm);
     SDL_DestroyRenderer(gh->ren);
