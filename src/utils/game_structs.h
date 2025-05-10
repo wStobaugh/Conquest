@@ -2,6 +2,9 @@
 #define H_GAME_STRUCTS
 #include <SDL2/SDL.h>
 
+// Forward declaration of ServiceManager
+struct ServiceManager;
+
 // Points to a function that is called once per game loop iteration
 typedef struct ComputationLayer {
     char *name; // Name of the layer
@@ -20,6 +23,7 @@ typedef struct GameHandle {
     SDL_Window *win;   // Window handle
     SDL_Renderer *ren; // Renderer handle
     ComputationStack *stack; // Stack of computation layers
+    struct ServiceManager *services;
 } GameHandle;
 
 

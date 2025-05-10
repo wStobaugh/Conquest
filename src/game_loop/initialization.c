@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "initialization.h"
 #include "../core/cursor/cursor.h"
+#include "../core/services/service_manager.h"
 
 
 // Set mouse image
@@ -83,6 +84,7 @@ GameHandle *game_init(void) {
 
     gh->win = win;
     gh->ren = ren;
+    gh->services = svc_create();
     gh->stack = malloc(sizeof(ComputationStack));
 
     // TODO: populate the stack with computation layers
