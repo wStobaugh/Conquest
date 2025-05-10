@@ -1,13 +1,18 @@
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+#include <stdio.h>
+#define CONQUEST_LOG_IMPLEMENTATION   /* <- one place only */
+#include "utils/log.h"
 #include "core/input/input_manager.h"
 #include "core/state/state_manager.h"
 #include "game_loop/game_loop.h"
 #include "game_loop/initialization.h"
 #include "utils/game_structs.h"
 #include "core/cursor/cursor.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-#include <stdio.h>
+
+
 
 static const char *font_path() {
     char *base = SDL_GetBasePath();
@@ -21,6 +26,13 @@ static const char *font_path() {
 int main(int argc, char **argv) {
     (void)argc;
     (void)argv;
+
+    // Initialize logging
+    char log_path[512];
+    char *base_path = SDL_GetBasePath();
+    snprintf(log_path, sizeof(log_path), "%slogs/conquest.log", base_path ? base_path : "");
+    SDL_free(base_path);
+    log_init(log_path);
 
     // Game loop initialization, it reutrns a GameHandle
     GameHandle *gh = game_init();
