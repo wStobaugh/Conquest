@@ -41,7 +41,8 @@ mkdir -p \
   "$SRC_DIR" \
   "$BIN_DIR" \
   "$RES_DIR" \
-  "$WIN_APP_DIR"
+  "$WIN_APP_DIR" \
+  "$WIN_APP_DIR/logs"
 
 # ─── 3. SYNC GAME SOURCE ────────────────────────────────────────────────────────
 rsync -av --delete "$PROJECT_DIR/src/" "$SRC_DIR/"
@@ -106,6 +107,7 @@ gcc_flags=(
   -lSDL2_ttf
   -lSDL2_image
   -mconsole
+  -pthread
 )
 
 x86_64-w64-mingw32-gcc "${gcc_flags[@]}"
@@ -113,6 +115,9 @@ x86_64-w64-mingw32-gcc "${gcc_flags[@]}"
 # ─── 9. DEPLOY TO WINDOWS ──────────────────────────────────────────────────────
 echo "Copying runtime + exe → $WIN_APP_DIR"
 sudo rm -rf "$WIN_APP_DIR"/*
+
+# Create logs directory
+mkdir -p "$WIN_APP_DIR/logs"
 
 # Copy every DLL from SDL2, SDL2_ttf, SDL2_image bins
 cp "$SDL2_WIN"/bin/*.dll        "$WIN_APP_DIR/"
