@@ -1,9 +1,11 @@
-#include "initialization.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <unistd.h>
+#include "initialization.h"
+#include "../core/cursor/cursor.h"
+
 
 // Set mouse image
 static const char *mouse_path() {
@@ -84,6 +86,10 @@ GameHandle *game_init(void) {
     gh->stack = malloc(sizeof(ComputationStack));
 
     // TODO: populate the stack with computation layers
+
+    // Initialise cursor module (ignore return but log if needed)
+    if (cursor_init() != 0)
+        SDL_Log("cursor_init() failed – using default system cursor");
 
     return gh;
 }
