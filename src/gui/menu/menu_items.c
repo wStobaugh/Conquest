@@ -4,6 +4,7 @@ both the UI elements and logical flow of the menu.
 */
 #include "menu_items.h"
 #include "menu.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -24,8 +25,8 @@ void menu_build_main(Menu *m) {
     int spacing = 70;
     menu_add_button(m, "Continue", "goto_continue", base_y);
     menu_add_button(m, "New Game", "goto_newgame", base_y + spacing);
-    menu_add_button(m, "Settings", "goto_settings", base_y + spacing*2);
-    menu_add_button(m, "Credits", "goto_credits", base_y + spacing*3);
+    menu_add_button(m, "Settings", "goto_settings", base_y + spacing * 2);
+    menu_add_button(m, "Credits", "goto_credits", base_y + spacing * 3);
 }
 
 // Continue game

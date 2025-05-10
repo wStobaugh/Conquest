@@ -1,5 +1,5 @@
 #include "menu.h"
-#include "../../input/input_manager.h"
+#include "../../core/input/input_manager.h"
 #include "../../utils/math_utils.h"
 
 /*--------------------------------------------------------------------------*/

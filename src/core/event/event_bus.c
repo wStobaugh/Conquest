@@ -5,6 +5,8 @@ consumers, enabling a more modular architecture. The event bus can handle
 different types of events,
 */
 #include "event_bus.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 // ––– helpers for Channel –––
@@ -33,7 +35,6 @@ void channel_subscribe(Channel *c, EventListener fn) {
             return;
         }
         c->listeners = tmp;
-        c->listener_cap = newcap;
         c->listener_cap = newcap;
     }
     c->listeners[c->listener_count++] = fn;

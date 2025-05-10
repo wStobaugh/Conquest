@@ -1,6 +1,6 @@
 #ifndef CONQUEST_STATE_MANAGER_H
 #define CONQUEST_STATE_MANAGER_H
-#include "../gui/menu/menu.h"
+#include "../../gui/menu/menu.h"
 #include <SDL2/SDL.h>
 
 enum GameState { GS_MENU, GS_PLAY, GS_QUIT };

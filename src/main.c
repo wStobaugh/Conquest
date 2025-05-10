@@ -1,6 +1,8 @@
-#include "input/input_manager.h"
-#include "state/state_manager.h"
+#include "core/input/input_manager.h"
+#include "core/state/state_manager.h"
+#include "game_loop/game_loop.h"
 #include "game_loop/initialization.h"
+#include "utils/game_structs.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -16,33 +18,24 @@ static const char *font_path() {
 }
 
 int main(int argc, char **argv) {
-  (void)argc;
-  (void)argv;
+    (void)argc;
+    (void)argv;
 
-  // Game loop initialization
-  game_init();
+    // Game loop initialization, it reutrns a GameHandle
+    GameHandle *gh = game_init();
 
-    // 1) Create a borderless fullscreen-desktop window (size args are ignored)
-    SDL_Window *win = SDL_CreateWindow(
-        "Conquest", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
-
-    // 2) Query the actual window (desktop) size
+    // Get window dimensions
     int win_w, win_h;
-    SDL_GetWindowSize(win, &win_w, &win_h);
-    // now win_w/win_h == your monitor’s current desktop resolution
+    SDL_GetWindowSize(gh->win, &win_w, &win_h);
 
-    // 3) Create the renderer
-    SDL_Renderer *ren = SDL_CreateRenderer(
-        win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-
-    // 4) Pass win_w/win_h to your menu/state manager, etc.
-    StateManager *sm = sm_create(ren, win_w, win_h, font_path());
+    // Pass win_w/win_h to your menu/state manager, etc.
+    StateManager *sm = sm_create(gh->ren, win_w, win_h, font_path());
     InputManager *im = input_create();
 
     Uint32 target_ms = 1000 / 60;
     int running = 1;
     while (running) {
+        // TODO: Run game_loop here
         Uint32 frame_start = SDL_GetTicks();
         SDL_Event e;
         while (SDL_PollEvent(&e))
@@ -55,8 +48,8 @@ int main(int argc, char **argv) {
         sm_handle_input(sm, im);
 
         sm_update(sm);
-        sm_render(sm, ren);
-        SDL_RenderPresent(ren);
+        sm_render(sm, gh->ren);
+        SDL_RenderPresent(gh->ren);
         input_update(im); /* wipe pressed / released for next frame */
 
         /* fps cap … */
@@ -65,12 +58,13 @@ int main(int argc, char **argv) {
             SDL_Delay(target_ms - dt);
     }
     /* shutdown */
-    input_destroy(im);
 
+    input_destroy(im);
     sm_destroy(sm);
-    SDL_DestroyRenderer(ren);
-    SDL_DestroyWindow(win);
+    SDL_DestroyRenderer(gh->ren);
+    SDL_DestroyWindow(gh->win);
     TTF_Quit();
     SDL_Quit();
+    free(gh); /* we malloc’d it in game_init */
     return 0;
 }
