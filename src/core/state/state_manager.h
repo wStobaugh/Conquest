@@ -3,7 +3,7 @@
 #include "../../gui/menu/menu.h"
 #include <SDL2/SDL.h>
 
-enum GameState { GS_MENU, GS_PLAY, GS_QUIT };
+enum GameState { GS_MENU, GS_PLAY, GS_QUIT, GS_PAUSE };
 
 typedef struct StateManager {
   enum GameState state;

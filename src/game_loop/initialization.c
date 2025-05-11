@@ -1,12 +1,12 @@
+#include "initialization.h"
+#include "../core/compute/computation_stack.h"
+#include "../core/cursor/cursor.h"
+#include "../core/services/service_manager.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "initialization.h"
-#include "../core/cursor/cursor.h"
-#include "../core/services/service_manager.h"
-
 
 // Set mouse image
 static const char *mouse_path() {
@@ -86,6 +86,8 @@ GameHandle *game_init(void) {
     gh->ren = ren;
     gh->services = svc_create();
     gh->stack = malloc(sizeof(ComputationStack));
+    comp_stack_init(gh->stack);
+    gh->running = 1;
 
     // TODO: populate the stack with computation layers
 
