@@ -4,6 +4,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #define CONQUEST_LOG_IMPLEMENTATION /* <- one place only */
+#include "core/audio/audio_manager.h"
 #include "core/compute/computation_stack.h"
 #include "core/cursor/cursor.h"
 #include "core/input/input_manager.h"
@@ -17,11 +18,21 @@
 // implicit declaration of function 'game_shutdown'
 void game_shutdown(GameHandle *gh);
 
+// TODO: move this to a separate file
 static const char *font_path() {
     char *base = SDL_GetBasePath();
     static char buf[1024];
     snprintf(buf, sizeof buf, "%sresources/fonts/OpenSans-Regular.ttf",
              base ? base : "");
+    SDL_free(base);
+    return buf;
+}
+
+static const char *music_path(const char *file) {
+    char *base = SDL_GetBasePath();
+    static char buf[1024];
+    snprintf(buf, sizeof buf, "%sresources/audio/music/%s", base ? base : "",
+             file);
     SDL_free(base);
     return buf;
 }
@@ -72,16 +83,32 @@ int main(int argc, char **argv) {
     // Pass win_w/win_h to your menu/state manager, etc.
     StateManager *sm = sm_create(gh->ren, win_w, win_h, font_path());
     InputManager *im = input_create();
+    AudioManager *am = am_create(10); // 10 is the max number of audios
+
+    if (!sm || !im || !am) {
+        LOG_ERROR("Failed to create game subsystems\n");
+        game_shutdown(gh);
+        return 1;
+    }
 
     // Register services
     svc_register(gh->services, INPUT_SERVICE, im);
     svc_register(gh->services, STATE_MANAGER_SERVICE, sm);
+    svc_register(gh->services, AUDIO_SERVICE, am);
 
     // Register computation layers
     push_layer(gh, "sm_input", layer_state_input, 300);
     push_layer(gh, "sm_update", layer_state_update, 200);
     push_layer(gh, "sm_render", layer_state_render, 100);
     push_layer(gh, "present", layer_present, 0);
+
+    /* ---- STARTUP BACKGROUND MUSIC ------------------------------------ */
+    // Loop = 1  → play forever.  Volume (0-128)
+    // TODO: Music level should be controlled by settings
+    Audio *bg = audio_create(music_path("Music_1.mp3"), MUSIC, 8, 1);
+    am_register(am, bg);
+    am_play(am, bg);
+    /* ------------------------------------------------------------------- */
 
     // Target FPS: 60
     Uint32 target_ms = 1000 / 60;
@@ -120,6 +147,11 @@ void game_shutdown(GameHandle *gh) {
         StateManager *sm = svc_get(gh->services, STATE_MANAGER_SERVICE);
         if (sm)
             sm_destroy(sm);
+
+        /* Get and clean up audio manager */
+        AudioManager *am = svc_get(gh->services, AUDIO_SERVICE);
+        if (am)
+            am_destroy(am);
 
         /* Destroy the service manager itself */
         svc_destroy(gh->services);
