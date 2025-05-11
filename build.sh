@@ -77,10 +77,27 @@ if [ ! -d "$SDK_DIR/SDL2_image-${SDL2_IMAGE_VERSION}/x86_64-w64-mingw32" ]; then
   tar -xf "$DOWNLOAD_DIR/$SDL2_IMAGE_ARCHIVE" -C "$SDK_DIR"
 fi
 
+ # ─── SDL2_mixer DOWNLOAD & EXTRACT ────────────────────────────────────────
+ SDL2_MIXER_VERSION="2.6.2"
+ SDL2_MIXER_ARCHIVE="SDL2_mixer-devel-${SDL2_MIXER_VERSION}-mingw.tar.gz"
+ SDL2_MIXER_URL="https://libsdl.org/projects/SDL_mixer/release/${SDL2_MIXER_ARCHIVE}"
+
+ if [ ! -f "$DOWNLOAD_DIR/$SDL2_MIXER_ARCHIVE" ]; then
+   echo "Downloading SDL2_mixer ${SDL2_MIXER_VERSION}…"
+   wget -q --show-progress -P "$DOWNLOAD_DIR" "$SDL2_MIXER_URL"
+ fi
+ if [ ! -d "$SDK_DIR/SDL2_mixer-${SDL2_MIXER_VERSION}/x86_64-w64-mingw32" ]; then
+   echo "Extracting SDL2_mixer…"
+   tar -xf "$DOWNLOAD_DIR/$SDL2_MIXER_ARCHIVE" -C "$SDK_DIR"
+ fi
+
+ export SDL2_MIXER_WIN="$SDK_DIR/SDL2_mixer-${SDL2_MIXER_VERSION}/x86_64-w64-mingw32"
+
 # ─── 7. EXPORT SDK PATHS ───────────────────────────────────────────────────────
 export SDL2_WIN="$SDK_DIR/SDL2-${SDL2_VERSION}/x86_64-w64-mingw32"
 export SDL2_TTF_WIN="$SDK_DIR/SDL2_ttf-${SDL2_TTF_VERSION}/x86_64-w64-mingw32"
 export SDL2_IMG_WIN="$SDK_DIR/SDL2_image-${SDL2_IMAGE_VERSION}/x86_64-w64-mingw32"
+export SDL2_MIXER_WIN="$SDK_DIR/SDL2_mixer-${SDL2_MIXER_VERSION}/x86_64-w64-mingw32"
 
 # ─── 8. BUILD WINDOWS EXECUTABLE ───────────────────────────────────────────────
 readarray -d '' src_files < <(
@@ -88,8 +105,8 @@ readarray -d '' src_files < <(
 )
 
 gcc_flags=(
-  "${src_files[@]}"
-  -o "$BIN_DIR/${APP_NAME}.exe"
+  "${src_files[@]}"                   # your collected .c files
+  -o "$BIN_DIR/${APP_NAME}.exe"       # output executable
   # includes
   -I"$SDL2_WIN/include"
   -I"$SDL2_WIN/include/SDL2"
@@ -97,23 +114,26 @@ gcc_flags=(
   -I"$SDL2_TTF_WIN/include/SDL2"
   -I"$SDL2_IMG_WIN/include"
   -I"$SDL2_IMG_WIN/include/SDL2"
+  -I"$SDL2_MIXER_WIN/include"
+  -I"$SDL2_MIXER_WIN/include/SDL2"
   # libs
   -L"$SDL2_WIN/lib"
   -L"$SDL2_TTF_WIN/lib"
   -L"$SDL2_IMG_WIN/lib"
+  -L"$SDL2_MIXER_WIN/lib"
   -lmingw32
   -lSDL2main
   -lSDL2
   -lSDL2_ttf
   -lSDL2_image
+  -lSDL2_mixer
   -mconsole
   -pthread
 )
-
 x86_64-w64-mingw32-gcc "${gcc_flags[@]}"
 
 # ─── 9. DEPLOY TO WINDOWS ──────────────────────────────────────────────────────
-echo "Copying runtime + exe → $WIN_APP_DIR"
+echo "Copying runtime  exe → $WIN_APP_DIR"
 sudo rm -rf "$WIN_APP_DIR"/*
 
 # Create logs directory
@@ -123,6 +143,7 @@ mkdir -p "$WIN_APP_DIR/logs"
 cp "$SDL2_WIN"/bin/*.dll        "$WIN_APP_DIR/"
 cp "$SDL2_TTF_WIN"/bin/*.dll    "$WIN_APP_DIR/"
 cp "$SDL2_IMG_WIN"/bin/*.dll    "$WIN_APP_DIR/"
+cp "$SDL2_MIXER_WIN"/bin/*.dll  "$WIN_APP_DIR/"
 
 # Copy the exe
 cp -f "$BIN_DIR/${APP_NAME}.exe" "$WIN_APP_DIR/"
