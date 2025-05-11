@@ -4,44 +4,29 @@ This file is part of the game engine project.
 
 */
 #include "game_loop.h"
+#include "../core/compute/computation_stack.h"
+#include "../core/input/input_manager.h"
+#include "../core/services/service_manager.h"
+#include "../core/state/state_manager.h"
 #include "../utils/game_structs.h"
 #include <SDL2/SDL.h>
+#include <string.h>
 
 // Runs one iteration of the game loop
 void game_loop(GameHandle *gh) {
-    // Iterate though a list of computation layers
-}
 
-// Function to add a computation layer to the stack
-void add_computation_layer(ComputationStack *stack, ComputationLayer *layer) {
-    layer->next = stack->top;
-    stack->top = layer;
-}
-// Function to remove a computation layer from the stack given its name
-void remove_computation_layer(ComputationStack *stack, const char *name) {
-    ComputationLayer *current = stack->top;
-    ComputationLayer *previous = NULL;
+    InputManager *im = svc_get(gh->services, INPUT_SERVICE);
+    StateManager *sm = svc_get(gh->services, STATE_MANAGER_SERVICE);
 
-    while (current != NULL) {
-        if (strcmp(current->name, name) == 0) {
-            if (previous == NULL) {
-                stack->top = current->next;
-            } else {
-                previous->next = current->next;
-            }
-            free(current);
-            return;
-        }
-        previous = current;
-        current = current->next;
-    }
-}
+    SDL_Event e;
+    while (SDL_PollEvent(&e))
+        // Replace im with getting gh service
+        input_handle_event(im, &e);
 
-// Function to execute all computation layers in the stack
-static void execute_computation_layers(ComputationStack *stack) {
-    ComputationLayer *current = stack->top;
-    while (current != NULL) {
-        current->fn();
-        current = current->next;
-    }
+    /* global hot-keys */
+    if (input_pressed(im, ACTION_QUIT))
+        gh->running = 0;
+
+    // Iterate through the computation stack and execute each layer
+    comp_stack_execute(gh->stack, gh);
 }

@@ -4,10 +4,9 @@
 
 /* Add new kinds of services here as your engine grows */
 typedef enum {
-    SERVICE_INPUT,
-    SERVICE_STATE,
-    SERVICE_AUDIO,
-    SERVICE_MAX /* keep last */
+    INPUT_SERVICE,
+    STATE_MANAGER_SERVICE,
+    AUDIO_SERVICE
 } ServiceType;
 
 /* Opaque handle */
