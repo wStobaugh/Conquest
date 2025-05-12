@@ -1,4 +1,3 @@
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -6,8 +5,10 @@
 #define CONQUEST_LOG_IMPLEMENTATION /* <- one place only */
 #include "core/audio/audio_manager.h"
 #include "core/compute/computation_stack.h"
+#include "core/compute/computation_layers.h"
 #include "core/cursor/cursor.h"
 #include "core/input/input_manager.h"
+#include "core/resources/resource_paths.h"
 #include "core/services/service_manager.h"
 #include "core/state/state_manager.h"
 #include "game_loop/game_loop.h"
@@ -18,48 +19,7 @@
 // implicit declaration of function 'game_shutdown'
 void game_shutdown(GameHandle *gh);
 
-// TODO: move this to a separate file
-static const char *font_path() {
-    char *base = SDL_GetBasePath();
-    static char buf[1024];
-    snprintf(buf, sizeof buf, "%sresources/fonts/OpenSans-Regular.ttf",
-             base ? base : "");
-    SDL_free(base);
-    return buf;
-}
-
-static const char *music_path(const char *file) {
-    char *base = SDL_GetBasePath();
-    static char buf[1024];
-    snprintf(buf, sizeof buf, "%sresources/audio/music/%s", base ? base : "",
-             file);
-    SDL_free(base);
-    return buf;
-}
-
-/* ---------- computation layers ------------------------------------ */
-// TODO: We probably want to move this to a separate file
-static void layer_state_input(GameHandle *gh) {
-    InputManager *im = svc_get(gh->services, INPUT_SERVICE);
-    StateManager *sm = svc_get(gh->services, STATE_MANAGER_SERVICE);
-    sm_handle_input(sm, im);
-}
-
-static void layer_state_update(GameHandle *gh) {
-    StateManager *sm = svc_get(gh->services, STATE_MANAGER_SERVICE);
-    sm_update(sm);
-}
-
-static void layer_state_render(GameHandle *gh) {
-    StateManager *sm = svc_get(gh->services, STATE_MANAGER_SERVICE);
-    sm_render(sm, gh->ren);
-}
-
-static void layer_present(GameHandle *gh) {
-    SDL_RenderPresent(gh->ren);
-    InputManager *im = svc_get(gh->services, INPUT_SERVICE);
-    input_update(im);
-}
+/* ---------- computation layers moved to core/compute/computation_layers.c ---- */
 
 int main(int argc, char **argv) {
     (void)argc;
@@ -81,7 +41,7 @@ int main(int argc, char **argv) {
     SDL_GetWindowSize(gh->win, &win_w, &win_h);
 
     // Pass win_w/win_h to your menu/state manager, etc.
-    StateManager *sm = sm_create(gh->ren, win_w, win_h, font_path());
+    StateManager *sm = sm_create(gh->ren, win_w, win_h, get_font_path());
     InputManager *im = input_create();
     AudioManager *am = am_create(10); // 10 is the max number of audios
 
@@ -97,15 +57,12 @@ int main(int argc, char **argv) {
     svc_register(gh->services, AUDIO_SERVICE, am);
 
     // Register computation layers
-    push_layer(gh, "sm_input", layer_state_input, 300);
-    push_layer(gh, "sm_update", layer_state_update, 200);
-    push_layer(gh, "sm_render", layer_state_render, 100);
-    push_layer(gh, "present", layer_present, 0);
+    register_standard_layers(gh);
 
     /* ---- STARTUP BACKGROUND MUSIC ------------------------------------ */
     // Loop = 1  → play forever.  Volume (0-128)
     // TODO: Music level should be controlled by settings
-    Audio *bg = audio_create(music_path("Music_1.mp3"), MUSIC, 8, 1);
+    Audio *bg = audio_create(get_music_path("Music_1.mp3"), MUSIC, 8, 1);
     am_register(am, bg);
     am_play(am, bg);
     /* ------------------------------------------------------------------- */

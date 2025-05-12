@@ -89,7 +89,6 @@ GameHandle *game_init(void) {
     comp_stack_init(gh->stack);
     gh->running = 1;
 
-    // TODO: populate the stack with computation layers
 
     // Initialise cursor module (ignore return but log if needed)
     if (cursor_init() != 0)
