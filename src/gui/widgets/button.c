@@ -63,8 +63,13 @@ void button_render(Button *b, SDL_Renderer *ren) {
         ren, b->current_background_color.r, b->current_background_color.g,
         b->current_background_color.b, b->current_background_color.a);
     SDL_RenderFillRect(ren, &b->box);
-    // TODO: Update color
-    SDL_SetRenderDrawColor(ren, 200, 200, 200, b->current_background_color.a);
+    
+    // Set border color to a slightly darker shade of the button's background color
+    SDL_SetRenderDrawColor(ren, 
+        clamp(b->current_background_color.r - 30, 0, 255),
+        clamp(b->current_background_color.g - 30, 0, 255),
+        clamp(b->current_background_color.b - 30, 0, 255),
+        b->current_background_color.a);
     SDL_RenderDrawRect(ren, &b->box);
     SDL_Rect txt_dst = {b->box.x + 10, b->box.y + 10, b->box.w - 20,
                         b->box.h - 20};
