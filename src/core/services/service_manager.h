@@ -6,7 +6,8 @@
 typedef enum {
     INPUT_SERVICE,
     STATE_MANAGER_SERVICE,
-    AUDIO_SERVICE
+    AUDIO_SERVICE,
+    SETTINGS_MANAGER_SERVICE
 } ServiceType;
 
 /* Opaque handle */
