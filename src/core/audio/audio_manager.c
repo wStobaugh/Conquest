@@ -10,7 +10,7 @@
 static int mixer_init_once(void) {
     static int initialised = 0;
     if (!initialised) {
-        if (Mix_OpenAudio(44100,                 /* 44.1 kHz */
+        if (Mix_OpenAudio(44100,                 /* 44.1 kHz */
                           MIX_DEFAULT_FORMAT, 2, /* stereo  */
                           2048) < 0) {
             LOG_ERROR("Mix_OpenAudio: %s\n", Mix_GetError());
@@ -164,4 +164,54 @@ void am_stop(AudioManager *m, Audio *a) {
     stop_audio_raw(a);
     if (a == m->current_music)
         m->current_music = NULL;
+}
+
+// Callback for when a channel finishes playing
+static void channel_finished_callback(int channel) {
+    Mix_Chunk* chunk = Mix_GetChunk(channel);
+    if (chunk) {
+        Mix_FreeChunk(chunk);
+    }
+}
+
+// Play a one-shot sound effect without requiring caller to manage the Audio object
+int am_play_oneshot(AudioManager *mgr, const char *path, int volume) {
+    if (!mgr || !path) {
+        LOG_ERROR("Invalid arguments to am_play_oneshot\n");
+        return 0;
+    }
+    
+    LOG_INFO("Loading one-shot sound from: %s\n", path);
+    
+    // First check if the file exists
+    SDL_RWops* file = SDL_RWFromFile(path, "rb");
+    if (!file) {
+        LOG_ERROR("Sound file does not exist at path: %s (SDL Error: %s)\n", 
+                 path, SDL_GetError());
+        return 0;
+    }
+    SDL_RWclose(file);
+    
+    // Load the sound effect directly
+    Mix_Chunk* chunk = Mix_LoadWAV(path);
+    if (!chunk) {
+        LOG_ERROR("Mix_LoadWAV(%s): %s\n", path, Mix_GetError());
+        return 0;
+    }
+    
+    // Set volume and play
+    Mix_VolumeChunk(chunk, volume);
+    
+    // Set up a channel finished callback to free the chunk when done playing
+    Mix_ChannelFinished(channel_finished_callback);
+    
+    int channel = Mix_PlayChannel(-1, chunk, 0);
+    if (channel == -1) {
+        LOG_ERROR("Mix_PlayChannel: %s\n", Mix_GetError());
+        Mix_FreeChunk(chunk);
+        return 0;
+    }
+    
+    LOG_INFO("Successfully started playing one-shot sound\n");
+    return 1;
 }

@@ -18,4 +18,14 @@ void sm_destroy(StateManager *sm);
 struct InputManager;                       /* forward-declare */
 void sm_handle_input(StateManager *sm, const struct InputManager *im);
 
+// Forward declarations for service managers
+struct AudioManager;
+struct SettingsManager;
+
+// Initialize the menu background music
+void sm_initialize_menu_music(StateManager *sm, struct AudioManager *am, struct SettingsManager *settings);
+
+// Set the audio manager for the state manager's menu
+void sm_set_audio_manager(StateManager *sm, struct AudioManager *am);
+
 #endif // CONQUEST_STATE_MANAGER_H

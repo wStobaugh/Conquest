@@ -40,50 +40,15 @@ int main(int argc, char **argv) {
     // Game loop initialization, it reutrns a GameHandle
     GameHandle *gh = game_init();
 
-    // Get window dimensions
-    int win_w, win_h;
-    SDL_GetWindowSize(gh->win, &win_w, &win_h);
-
-    // Create settings manager first (before other systems)
-    SettingsManager *settings = sm_settings_create();
-    if (!settings) {
-        LOG_ERROR("Failed to create settings manager\n");
+    // Initialize core services (state, input, audio, settings managers)
+    if (!initialize_core_services(gh)) {
+        LOG_ERROR("Failed to initialize core services\n");
         game_shutdown(gh);
         return 1;
     }
-    initialize_default_settings(settings);
-
-    // Pass win_w/win_h to your menu/state manager, etc.
-    StateManager *sm = sm_create(gh->ren, win_w, win_h, get_font_path());
-    InputManager *im = input_create();
-    AudioManager *am = am_create(10); // 10 is the max number of audios
-
-    if (!sm || !im || !am) {
-        LOG_ERROR("Failed to create game subsystems\n");
-        game_shutdown(gh);
-        return 1;
-    }
-
-    // Register services
-    svc_register(gh->services, INPUT_SERVICE, im);
-    svc_register(gh->services, STATE_MANAGER_SERVICE, sm);
-    svc_register(gh->services, AUDIO_SERVICE, am);
-    svc_register(gh->services, SETTINGS_MANAGER_SERVICE, settings);
 
     // Register computation layers
     register_standard_layers(gh);
-
-    /* ---- STARTUP BACKGROUND MUSIC ------------------------------------ */
-    // Loop = 1  → play forever.  Volume (0-128)
-    // Apply settings to the music volume
-    float music_volume = sm_get_float(settings, "music_volume");
-    float master_volume = sm_get_float(settings, "master_volume");
-    int sdl_volume = (int)(music_volume * master_volume * 128.0f);
-    
-    Audio *bg = audio_create(get_music_path("Music_1.mp3"), MUSIC, sdl_volume, 1);
-    am_register(am, bg);
-    am_play(am, bg);
-    /* ------------------------------------------------------------------- */
 
     // Target FPS: 60
     Uint32 target_ms = 1000 / 60;
@@ -134,7 +99,7 @@ void game_shutdown(GameHandle *gh) {
             // Save settings before shutting down
             char* base_path = SDL_GetBasePath();
             char settings_path[512];
-            snprintf(settings_path, sizeof(settings_path), "%ssettings.ini", base_path ? base_path : "");
+            LOG_INFO("Saving settings to: %ssettings.ini", base_path ? base_path : "");
             SDL_free(base_path);
             
             sm_save_settings(settings, settings_path);

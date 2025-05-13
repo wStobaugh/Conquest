@@ -42,3 +42,7 @@ int            am_register(AudioManager *mgr, Audio *audio);
 // high-level play/stop via manager:
 void           am_play   (AudioManager *mgr, Audio *audio);
 void           am_stop   (AudioManager *mgr, Audio *audio);
+
+// Play a one-shot sound effect (creates, plays and manages cleanup internally)
+// Returns 1 on success, 0 on failure
+int            am_play_oneshot(AudioManager *mgr, const char *path, int volume);

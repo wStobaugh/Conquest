@@ -605,7 +605,7 @@ bool sm_load_settings(SettingsManager* sm, const char* filename) {
     
     FILE* file = fopen(filename, "r");
     if (!file) {
-        LOG_WARNING("Settings file not found: %s (using defaults)\n", filename);
+        LOG_WARN("Settings file not found: %s (using defaults)\n", filename);
         return false;
     }
     
@@ -649,13 +649,13 @@ bool sm_load_settings(SettingsManager* sm, const char* filename) {
             // Find the setting
             Setting* setting = find_setting(sm, key);
             if (!setting) {
-                LOG_WARNING("Unknown setting '%s' in file\n", key);
+                LOG_WARN("Unknown setting '%s' in file\n", key);
                 continue;
             }
             
             // Check if the setting type matches
             if (setting_type != -1 && setting_type != setting->type) {
-                LOG_WARNING("Type mismatch for setting '%s'\n", key);
+                LOG_WARN("Type mismatch for setting '%s'\n", key);
                 setting_type = -1;
                 continue;
             }
