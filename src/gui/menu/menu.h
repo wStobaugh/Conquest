@@ -9,7 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Forward‑declared so other modules don’t see internals */
+// Forward declarations
+struct AudioManager;
+
+/* Forward‑declared so other modules don't see internals */
 // typedef struct Menu Menu;
 
 typedef struct Menu {
@@ -22,6 +25,7 @@ typedef struct Menu {
   Button *buttons;
   int btn_count;
   char signal_buf[64];
+  struct AudioManager *audio_manager; // Reference to the audio manager
 } Menu;
 
 typedef enum {
@@ -34,7 +38,7 @@ typedef enum {
 
 /* lifecycle */
 Menu *menu_create(SDL_Renderer *ren, int win_w, int win_h,
-                  const char *font_path);
+                  const char *font_path, struct AudioManager *audio_manager);
 void menu_destroy(Menu *m);
 
 /* frame */
@@ -51,5 +55,8 @@ void menu_get_fonts(Menu *m, void **title_font, void **body_font); /* opaque */
 // Input handling
 struct InputManager;                       /* forward-declare */
 void menu_handle_input(Menu *m, const struct InputManager *im);
+
+// Sound helpers
+void menu_play_select_sound(Menu *m);
 
 #endif // CONQUEST_GUI_MENU_H

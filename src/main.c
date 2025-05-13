@@ -10,6 +10,8 @@
 #include "core/input/input_manager.h"
 #include "core/resources/resource_paths.h"
 #include "core/services/service_manager.h"
+#include "core/settings/settings_manager.h"
+#include "core/settings/default_settings.h"
 #include "core/state/state_manager.h"
 #include "game_loop/game_loop.h"
 #include "game_loop/initialization.h"
@@ -18,6 +20,8 @@
 
 // implicit declaration of function 'game_shutdown'
 void game_shutdown(GameHandle *gh);
+
+
 
 /* ---------- computation layers moved to core/compute/computation_layers.c ---- */
 
@@ -36,36 +40,15 @@ int main(int argc, char **argv) {
     // Game loop initialization, it reutrns a GameHandle
     GameHandle *gh = game_init();
 
-    // Get window dimensions
-    int win_w, win_h;
-    SDL_GetWindowSize(gh->win, &win_w, &win_h);
-
-    // Pass win_w/win_h to your menu/state manager, etc.
-    StateManager *sm = sm_create(gh->ren, win_w, win_h, get_font_path());
-    InputManager *im = input_create();
-    AudioManager *am = am_create(10); // 10 is the max number of audios
-
-    if (!sm || !im || !am) {
-        LOG_ERROR("Failed to create game subsystems\n");
+    // Initialize core services (state, input, audio, settings managers)
+    if (!initialize_core_services(gh)) {
+        LOG_ERROR("Failed to initialize core services\n");
         game_shutdown(gh);
         return 1;
     }
 
-    // Register services
-    svc_register(gh->services, INPUT_SERVICE, im);
-    svc_register(gh->services, STATE_MANAGER_SERVICE, sm);
-    svc_register(gh->services, AUDIO_SERVICE, am);
-
     // Register computation layers
     register_standard_layers(gh);
-
-    /* ---- STARTUP BACKGROUND MUSIC ------------------------------------ */
-    // Loop = 1  → play forever.  Volume (0-128)
-    // TODO: Music level should be controlled by settings
-    Audio *bg = audio_create(get_music_path("Music_1.mp3"), MUSIC, 8, 1);
-    am_register(am, bg);
-    am_play(am, bg);
-    /* ------------------------------------------------------------------- */
 
     // Target FPS: 60
     Uint32 target_ms = 1000 / 60;
@@ -109,6 +92,19 @@ void game_shutdown(GameHandle *gh) {
         AudioManager *am = svc_get(gh->services, AUDIO_SERVICE);
         if (am)
             am_destroy(am);
+            
+        /* Get and clean up settings manager */
+        SettingsManager *settings = svc_get(gh->services, SETTINGS_MANAGER_SERVICE);
+        if (settings) {
+            // Save settings before shutting down
+            char* base_path = SDL_GetBasePath();
+            char settings_path[512];
+            LOG_INFO("Saving settings to: %ssettings.ini", base_path ? base_path : "");
+            SDL_free(base_path);
+            
+            sm_save_settings(settings, settings_path);
+            sm_settings_destroy(settings);
+        }
 
         /* Destroy the service manager itself */
         svc_destroy(gh->services);

@@ -1,7 +1,10 @@
 #include "menu.h"
 #include "../../core/input/input_manager.h"
+#include "../../core/audio/audio_manager.h"
+#include "../../core/resources/resource_paths.h"
 #include "../../utils/math_utils.h"
-
+#include "../../core/services/service_manager.h"
+#include "../../utils/log.h"
 /*--------------------------------------------------------------------------*/
 /* Helpers                                                                 */
 /*--------------------------------------------------------------------------*/
@@ -38,7 +41,23 @@ void menu_get_fonts(Menu *m, void **title, void **body) {
 }
 /* ─────────────────────────────────────────────────────────────────────── */
 
-Menu *menu_create(SDL_Renderer *ren, int w, int h, const char *font_path) {
+// Helper function to play menu select sound
+void menu_play_select_sound(Menu *m) {
+    if (!m || !m->audio_manager) {
+        LOG_ERROR("No menu or audio manager available\n");
+        return;
+    }
+    
+    // Get the full path to the sound file
+    const char* sound_path = get_sfx_path("menu_select.wav");
+    
+    // Use the new one-shot function which handles all the resource management
+    if (!am_play_oneshot(m->audio_manager, sound_path, 256)) {
+        LOG_ERROR("Failed to play one-shot menu select sound\n");
+    }
+}
+
+Menu *menu_create(SDL_Renderer *ren, int w, int h, const char *font_path, AudioManager *audio_manager) {
     Menu *m = calloc(1, sizeof *m);
     m->ren = ren;
     m->win_w = w;
@@ -47,6 +66,7 @@ Menu *menu_create(SDL_Renderer *ren, int w, int h, const char *font_path) {
     m->off_y = h / 5; /* 10% offset for title */
     m->title_font = TTF_OpenFont(font_path, 64);
     m->font = TTF_OpenFont(font_path, 28);
+    m->audio_manager = audio_manager;
     SDL_Surface *s = TTF_RenderUTF8_Solid(m->title_font, "CONQUEST",
                                           (SDL_Color){255, 255, 255, 255});
     m->title_tex = SDL_CreateTextureFromSurface(ren, s);
@@ -71,6 +91,7 @@ void menu_handle_input(Menu *m, const InputManager *im) {
             if (button_hover(&m->buttons[i], mx, my)) {
                 strncpy(m->signal_buf, m->buttons[i].signal,
                         sizeof m->signal_buf);
+                menu_play_select_sound(m); // Play sound when a menu item is selected
                 menu_build_from_signal(m, m->signal_buf);
                 break;
             }
