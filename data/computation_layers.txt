@@ -3,6 +3,4 @@
 
 100 : sm_render(sm, gh->ren);
 
-200 : sm_update(sm);
-
 300: sm_handle_input(sm, im);

@@ -16,6 +16,9 @@ This file is part of the game engine project.
 #include "../utils/log.h"
 #include <SDL2/SDL.h>
 #include <string.h>
+#include "../core/event/event_bus.h"
+#include "../core/event/event_signals.h"
+
 
 // Initialize core game services and register them with the service manager
 int initialize_core_services(GameHandle *gh) {
@@ -31,6 +34,15 @@ int initialize_core_services(GameHandle *gh) {
     }
     initialize_default_settings(settings);
 
+    // Create event bus
+    EventBus *bus = malloc(sizeof(EventBus));
+    if (!bus) {
+        LOG_ERROR("Failed to allocate memory for EventBus\n");
+        sm_settings_destroy(settings);
+        return 0;
+    }
+    bus_init(bus);
+
     // Create core managers
     StateManager *sm = sm_create(gh->ren, win_w, win_h, get_font_path());
     InputManager *im = input_create();
@@ -38,6 +50,11 @@ int initialize_core_services(GameHandle *gh) {
 
     if (!sm || !im || !am) {
         LOG_ERROR("Failed to create game subsystems\n");
+        if (bus) {
+            bus_destroy(bus);
+            free(bus);
+        }
+        if (settings) sm_settings_destroy(settings);
         return 0;
     }
 
@@ -46,7 +63,11 @@ int initialize_core_services(GameHandle *gh) {
     svc_register(gh->services, STATE_MANAGER_SERVICE, sm);
     svc_register(gh->services, AUDIO_SERVICE, am);
     svc_register(gh->services, SETTINGS_MANAGER_SERVICE, settings);
+    svc_register(gh->services, EVENT_BUS_SERVICE, bus);
 
+    // Set the services for the state manager
+    sm_set_services(sm, gh->services);
+    
     // Set the audio manager for the state manager's menu
     sm_set_audio_manager(sm, am);
     

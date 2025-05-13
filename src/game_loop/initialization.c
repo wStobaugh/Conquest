@@ -2,6 +2,8 @@
 #include "../core/compute/computation_stack.h"
 #include "../core/cursor/cursor.h"
 #include "../core/services/service_manager.h"
+#include "../core/event/event_bus.h"
+#include "../utils/log.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -21,28 +23,18 @@ static const char *mouse_path() {
 static void SDL_CheckErrors() {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         SDL_Log("SDL_Init: %s", SDL_GetError());
+        SDL_Quit();
         return;
     }
+    
     if (TTF_Init() != 0) {
         SDL_Log("TTF: %s", TTF_GetError());
         SDL_Quit();
         return;
     }
+
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
         SDL_Log("IMG_Init failed: %s", IMG_GetError());
-        SDL_Quit();
-        return;
-    }
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        SDL_Log("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-        SDL_Quit();
-        return;
-    }
-
-    // Initialize SDL_image
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
-        SDL_Log("SDL_image could not initialize! SDL_image Error: %s\n",
-                IMG_GetError());
         SDL_Quit();
         return;
     }
@@ -95,4 +87,30 @@ GameHandle *game_init(void) {
         SDL_Log("cursor_init() failed – using default system cursor");
 
     return gh;
+}
+
+// Initialize the EventBus and register it as a service
+int initialize_event_bus(GameHandle *gh) {
+    if (!gh || !gh->services) 
+        return 0;
+        
+    // Create and initialize the event bus
+    EventBus *bus = malloc(sizeof(EventBus));
+    if (!bus) {
+        LOG_ERROR("Failed to allocate memory for EventBus\n");
+        return 0;
+    }
+    
+    bus_init(bus);
+    
+    // Register the event bus as a service
+    if (svc_register(gh->services, EVENT_BUS_SERVICE, bus) != 0) {
+        LOG_ERROR("Failed to register EventBus service\n");
+        bus_destroy(bus);
+        free(bus);
+        return 0;
+    }
+    
+    LOG_INFO("EventBus initialized and registered as a service\n");
+    return 1;
 }

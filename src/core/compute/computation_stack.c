@@ -49,7 +49,8 @@ void comp_stack_destroy(ComputationStack *stack) {
         free(cur);
         cur = next;
     }
-    stack->top = NULL;
+    // Free the entire stack
+    free(stack);
 }
 
 /* helper to allocate + push */

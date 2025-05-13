@@ -3,7 +3,7 @@
 #include <string.h>
 
 Button button_make(SDL_Renderer *ren, TTF_Font *font, const char *text,
-                   const char *signal, int center_x, int y,
+                   MenuSignal signal, int center_x, int y,
                    SDL_Color base_background_color) {
     SDL_Surface *s =
         TTF_RenderUTF8_Solid(font, text, (SDL_Color){255, 255, 255, base_background_color.a});
@@ -26,10 +26,6 @@ Button button_make(SDL_Renderer *ren, TTF_Font *font, const char *text,
 int button_hover(Button *b, int mx, int my) {
     // If the label is null, return false
     if (!b->label)
-        return 0;
-
-    // If the signal is (null) return false
-    if (!b->signal)
         return 0;
 
     int is_hover = (mx >= b->box.x && mx <= b->box.x + b->box.w &&

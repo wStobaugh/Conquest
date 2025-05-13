@@ -6,9 +6,6 @@
 /* Layer for handling input in the state manager */
 void layer_state_input(GameHandle *gh);
 
-/* Layer for updating the state manager */
-void layer_state_update(GameHandle *gh);
-
 /* Layer for rendering the state manager */
 void layer_state_render(GameHandle *gh);
 
