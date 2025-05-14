@@ -1,0 +1,2 @@
+* Add a thin AssetCache service (hash-table path → SDL_Texture*/TTF_Font*/Mix_*).
+All loaders go through it; each returns a handle that auto-unloads on cache destruction.

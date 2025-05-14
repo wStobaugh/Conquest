@@ -5,6 +5,17 @@
 #include "../resources/resource_paths.h"
 #include "../../utils/log.h"
 #include <string.h>
+#include "../event/event_bus.h"
+#include "../event/event_signals.h"
+#include "../services/service_manager.h"
+
+// At the top of the file, add a static global instance
+static StateManager* g_sm_instance = NULL;
+
+// Add this function to implement sm_get_instance
+StateManager* sm_get_instance(void) {
+    return g_sm_instance;
+}
 
 // Initialize menu background music
 void sm_initialize_menu_music(StateManager *sm, AudioManager *am, SettingsManager *settings) {
@@ -28,14 +39,62 @@ void sm_initialize_menu_music(StateManager *sm, AudioManager *am, SettingsManage
     }
 }
 
-// This is how we initialize a new game state manager.
-StateManager *sm_create(SDL_Renderer *ren, int w, int h,
-                        const char *font_path) {
+// Event handler for menu signals
+static void sm_handle_menu_signals(const Event *e) {
+    if (e->type != EVENT_TYPE_SIGNAL || !e->data)
+        return;
+        
+    MenuSignal signal = *(MenuSignal*)e->data;
+    
+    // Free the allocated memory
+    free(e->data);
+    
+    // Get the state manager instance
+    StateManager *sm = g_sm_instance;
+    if (!sm) return;
+    
+    switch (signal) {
+        case MENU_SIGNAL_GOTO_CONTINUE:
+            sm->state = GS_PLAY; // Load saved game
+            break;
+        case MENU_SIGNAL_GOTO_NEW_GAME:
+            sm->state = GS_PLAY; // Create new game
+            break;
+        case MENU_SIGNAL_GOTO_OPTIONS:
+            // Show options menu (handled by menu system)
+            break;
+        case MENU_SIGNAL_GOTO_QUIT:
+            sm->state = GS_QUIT;
+            break;
+        case MENU_SIGNAL_GOTO_MAIN:
+            // Return to main menu (handled by menu system)
+            break;
+        default:
+            break;
+    }
+}
+
+// Update sm_create to set the instance
+StateManager *sm_create(SDL_Renderer *ren, int w, int h, const char *font_path) {
     StateManager *sm = calloc(1, sizeof *sm);
     sm->state = GS_MENU;
-    
-    // For now, we'll have to create menu without audio, audio will be added later
     sm->menu = menu_create(ren, w, h, font_path, NULL);
+    
+    // Store the instance globally
+    g_sm_instance = sm;
+    
+    // If services are already attached, get the event bus
+    if (sm->services) {
+        EventBus *bus = svc_get(sm->services, EVENT_BUS_SERVICE);
+        if (bus) {
+            // Set the event bus for the menu
+            menu_set_event_bus(sm->menu, bus);
+            
+            // Subscribe to menu signal events
+            bus_subscribe(bus, "menu_signals", sm_handle_menu_signals);
+        }
+    }
+    
     return sm;
 }
 
@@ -45,19 +104,6 @@ void sm_set_audio_manager(StateManager *sm, AudioManager *am) {
     
     // Update the menu's audio manager
     sm->menu->audio_manager = am;
-}
-
-// This function updates the state manager.
-void sm_update(StateManager *sm) {
-    if (sm->state == GS_MENU) {
-        const char *sig = menu_pop_signal(sm->menu);
-        if (!sig)
-            return;
-        if (strcmp(sig, "goto_newgame") == 0 ||
-            strcmp(sig, "goto_continue") == 0) {
-            sm->state = GS_PLAY; /* TODO: load or create world */
-        }
-    }
 }
 
 // This function renders the current state of the state manager.
@@ -82,10 +128,25 @@ void sm_handle_input(StateManager *sm, const InputManager *im) {
         sm->state = GS_MENU;
 }
 
-// This function destroys the state manager and frees its resources.
+// Update sm_destroy to clear the instance
 void sm_destroy(StateManager *sm) {
     if (!sm)
         return;
+    if (g_sm_instance == sm)
+        g_sm_instance = NULL;
     menu_destroy(sm->menu);
     free(sm);
+}
+
+// Implement setting services
+void sm_set_services(StateManager *sm, ServiceManager *services) {
+    if (!sm) return;
+    sm->services = services;
+    
+    // Try to get event bus and set up subscriptions
+    EventBus *bus = svc_get(services, EVENT_BUS_SERVICE);
+    if (bus && sm->menu) {
+        menu_set_event_bus(sm->menu, bus);
+        bus_subscribe(bus, "menu_signals", sm_handle_menu_signals);
+    }
 }

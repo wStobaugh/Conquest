@@ -16,6 +16,9 @@ This file is part of the game engine project.
 #include "../utils/log.h"
 #include <SDL2/SDL.h>
 #include <string.h>
+#include "../core/event/event_bus.h"
+#include "../core/event/event_signals.h"
+
 
 // Initialize core game services and register them with the service manager
 int initialize_core_services(GameHandle *gh) {
@@ -23,30 +26,32 @@ int initialize_core_services(GameHandle *gh) {
     int win_w, win_h;
     SDL_GetWindowSize(gh->win, &win_w, &win_h);
 
-    // Create settings manager first (before other systems)
-    SettingsManager *settings = sm_settings_create();
-    if (!settings) {
-        LOG_ERROR("Failed to create settings manager\n");
-        return 0;
-    }
-    initialize_default_settings(settings);
-
     // Create core managers
+    SettingsManager *settings = sm_settings_create();
+    EventBus *bus = malloc(sizeof(EventBus));
     StateManager *sm = sm_create(gh->ren, win_w, win_h, get_font_path());
     InputManager *im = input_create();
     AudioManager *am = am_create(10); // 10 is the max number of audios
 
-    if (!sm || !im || !am) {
+    if (!sm || !im || !am || !settings || !bus) {
         LOG_ERROR("Failed to create game subsystems\n");
         return 0;
     }
+
+    // Initialize services
+    initialize_default_settings(settings);
+    bus_init(bus);
 
     // Register services
     svc_register(gh->services, INPUT_SERVICE, im);
     svc_register(gh->services, STATE_MANAGER_SERVICE, sm);
     svc_register(gh->services, AUDIO_SERVICE, am);
     svc_register(gh->services, SETTINGS_MANAGER_SERVICE, settings);
+    svc_register(gh->services, EVENT_BUS_SERVICE, bus);
 
+    // Set the services for the state manager
+    sm_set_services(sm, gh->services);
+    
     // Set the audio manager for the state manager's menu
     sm_set_audio_manager(sm, am);
     

@@ -11,11 +11,6 @@ void layer_state_input(GameHandle *gh) {
     sm_handle_input(sm, im);
 }
 
-void layer_state_update(GameHandle *gh) {
-    StateManager *sm = svc_get(gh->services, STATE_MANAGER_SERVICE);
-    sm_update(sm);
-}
-
 void layer_state_render(GameHandle *gh) {
     StateManager *sm = svc_get(gh->services, STATE_MANAGER_SERVICE);
     sm_render(sm, gh->ren);
@@ -29,7 +24,6 @@ void layer_present(GameHandle *gh) {
 
 void register_standard_layers(GameHandle *gh) {
     push_layer(gh, "sm_input", layer_state_input, 300);
-    push_layer(gh, "sm_update", layer_state_update, 200);
     push_layer(gh, "sm_render", layer_state_render, 100);
     push_layer(gh, "present", layer_present, 0);
 } 

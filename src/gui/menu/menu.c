@@ -5,6 +5,8 @@
 #include "../../utils/math_utils.h"
 #include "../../core/services/service_manager.h"
 #include "../../utils/log.h"
+#include "../../core/event/event_signals.h"
+#include <stdio.h>
 /*--------------------------------------------------------------------------*/
 /* Helpers                                                                 */
 /*--------------------------------------------------------------------------*/
@@ -24,12 +26,12 @@ void menu_clear_buttons(Menu *m) {
     m->btn_count = 0;
 }
 
-void menu_add_button(Menu *m, const char *lbl, const char *sig, int y) {
+void menu_add_button(Menu *m, const char *lbl, MenuSignal signal, int y) {
     // Clamp y to the window height
     int real_y = clamp(y + m->off_y, 0, m->win_h - 90);
     m->buttons = realloc(m->buttons, sizeof(Button) * (m->btn_count + 1));
     m->buttons[m->btn_count++] =
-        button_make(m->ren, m->font, lbl, sig, m->win_w / 2, real_y,
+        button_make(m->ren, m->font, lbl, signal, m->win_w / 2, real_y,
                     (SDL_Color){100, 100, 100, 255});
 }
 int menu_center_x(Menu *m) { return m->win_w / 2; }
@@ -57,6 +59,10 @@ void menu_play_select_sound(Menu *m) {
     }
 }
 
+void menu_set_event_bus(Menu *m, EventBus *bus) {
+    m->event_bus = bus;
+}
+
 Menu *menu_create(SDL_Renderer *ren, int w, int h, const char *font_path, AudioManager *audio_manager) {
     Menu *m = calloc(1, sizeof *m);
     m->ren = ren;
@@ -67,6 +73,7 @@ Menu *menu_create(SDL_Renderer *ren, int w, int h, const char *font_path, AudioM
     m->title_font = TTF_OpenFont(font_path, 64);
     m->font = TTF_OpenFont(font_path, 28);
     m->audio_manager = audio_manager;
+    m->last_signal = MENU_SIGNAL_NONE;
     SDL_Surface *s = TTF_RenderUTF8_Solid(m->title_font, "CONQUEST",
                                           (SDL_Color){255, 255, 255, 255});
     m->title_tex = SDL_CreateTextureFromSurface(ren, s);
@@ -76,23 +83,41 @@ Menu *menu_create(SDL_Renderer *ren, int w, int h, const char *font_path, AudioM
     return m;
 }
 
-// Here is where we listen to ALL user input events.
+// Updated to emit events through the EventBus
 void menu_handle_input(Menu *m, const InputManager *im) {
     int mx, my;
     input_mouse_pos(im, &mx, &my);
+
+    // Remove or comment out debug print
+    // printf("Mouse position: %d, %d\n", mx, my);
 
     /* 1. hover colouring */
     for (int i = 0; i < m->btn_count; ++i)
         button_hover(&m->buttons[i], mx, my);
 
-    /* 2. click → fire signal */
+    /* 2. click → emit signal event */
     if (input_pressed(im, ACTION_CONFIRM)) {
         for (int i = 0; i < m->btn_count; ++i) {
             if (button_hover(&m->buttons[i], mx, my)) {
-                strncpy(m->signal_buf, m->buttons[i].signal,
-                        sizeof m->signal_buf);
-                menu_play_select_sound(m); // Play sound when a menu item is selected
-                menu_build_from_signal(m, m->signal_buf);
+                MenuSignal signal = m->buttons[i].signal;
+                m->last_signal = signal;
+                menu_play_select_sound(m);
+                
+                // Create and emit the event through the EventBus
+                if (m->event_bus) {
+                    // Allocate memory for the signal data that will persist
+                    MenuSignal* signal_data = malloc(sizeof(MenuSignal));
+                    *signal_data = signal;
+                    
+                    Event event = {
+                        .type = EVENT_TYPE_SIGNAL,
+                        .data = signal_data  // Use the allocated memory
+                    };
+                    bus_emit(m->event_bus, "menu_signals", &event);
+                }
+                
+                // Call this with the enum directly
+                menu_build_from_signal(m, signal);
                 break;
             }
         }
@@ -112,12 +137,8 @@ void menu_render(Menu *m, SDL_Renderer *ren) {
         button_render(&m->buttons[i], ren);
 }
 
-const char *menu_pop_signal(Menu *m) {
-    if (!m->signal_buf[0])
-        return NULL;
-    char *s = m->signal_buf;
-    m->signal_buf[0] = '\0'; /* clear buffer */
-    return s;
+MenuSignal menu_get_last_signal(Menu *m) {
+    return m->last_signal;
 }
 
 void menu_destroy(Menu *m) {
@@ -133,4 +154,11 @@ void menu_destroy(Menu *m) {
     if (m->font)
         TTF_CloseFont(m->font);
     free(m);
+}
+
+// Replace menu_pop_signal with a function that returns the enum directly
+MenuSignal menu_pop_signal(Menu *m) {
+    MenuSignal signal = m->last_signal;
+    m->last_signal = MENU_SIGNAL_NONE;
+    return signal;
 }

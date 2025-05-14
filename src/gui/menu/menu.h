@@ -3,6 +3,7 @@
 
 #include "../widgets/button.h"
 #include "menu_items.h"
+#include "../../core/event/event_bus.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -24,7 +25,8 @@ typedef struct Menu {
   SDL_Rect title_dst;
   Button *buttons;
   int btn_count;
-  char signal_buf[64];
+  MenuSignal last_signal;
+  EventBus *event_bus; // Reference to the event bus
   struct AudioManager *audio_manager; // Reference to the audio manager
 } Menu;
 
@@ -44,11 +46,11 @@ void menu_destroy(Menu *m);
 /* frame */
 void menu_handle_event(Menu *m, const SDL_Event *e);
 void menu_render(Menu *m, SDL_Renderer *ren);
-const char *menu_pop_signal(Menu *m);
+MenuSignal menu_pop_signal(Menu *m);
 
 /* internal helpers that content builders use */
 void menu_clear_buttons(Menu *m);
-void menu_add_button(Menu *m, const char *label, const char *signal, int y);
+void menu_add_button(Menu *m, const char *label, MenuSignal signal, int y);
 int menu_center_x(Menu *m);
 void menu_get_fonts(Menu *m, void **title_font, void **body_font); /* opaque */
 
@@ -58,5 +60,14 @@ void menu_handle_input(Menu *m, const struct InputManager *im);
 
 // Sound helpers
 void menu_play_select_sound(Menu *m);
+
+// New function to set the event bus
+void menu_set_event_bus(Menu *m, EventBus *bus);
+
+// Updated function to add buttons with MenuSignal instead of string
+void menu_add_button(Menu *m, const char *label, MenuSignal signal, int y);
+
+// Remove or update the signal popping function
+MenuSignal menu_get_last_signal(Menu *m);
 
 #endif // CONQUEST_GUI_MENU_H

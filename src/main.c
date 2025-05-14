@@ -21,6 +21,15 @@
 // implicit declaration of function 'game_shutdown'
 void game_shutdown(GameHandle *gh);
 
+/* Initialize logging system */
+void initialize_logging(void) {
+    char log_path[512];
+    char *base_path = SDL_GetBasePath();
+    snprintf(log_path, sizeof(log_path), "%slogs/conquest.log",
+             base_path ? base_path : "");
+    SDL_free(base_path);
+    log_init(log_path);
+}
 
 
 /* ---------- computation layers moved to core/compute/computation_layers.c ---- */
@@ -30,12 +39,7 @@ int main(int argc, char **argv) {
     (void)argv;
 
     // Initialize logging
-    char log_path[512];
-    char *base_path = SDL_GetBasePath();
-    snprintf(log_path, sizeof(log_path), "%slogs/conquest.log",
-             base_path ? base_path : "");
-    SDL_free(base_path);
-    log_init(log_path);
+    initialize_logging();
 
     // Game loop initialization, it reutrns a GameHandle
     GameHandle *gh = game_init();
@@ -123,7 +127,6 @@ void game_shutdown(GameHandle *gh) {
 
     /* Clean up the computation stack */
     comp_stack_destroy(gh->stack);
-    free(gh->stack);
 
     /* Free the game handle */
     free(gh);
