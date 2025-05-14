@@ -26,37 +26,21 @@ int initialize_core_services(GameHandle *gh) {
     int win_w, win_h;
     SDL_GetWindowSize(gh->win, &win_w, &win_h);
 
-    // Create settings manager first (before other systems)
-    SettingsManager *settings = sm_settings_create();
-    if (!settings) {
-        LOG_ERROR("Failed to create settings manager\n");
-        return 0;
-    }
-    initialize_default_settings(settings);
-
-    // Create event bus
-    EventBus *bus = malloc(sizeof(EventBus));
-    if (!bus) {
-        LOG_ERROR("Failed to allocate memory for EventBus\n");
-        sm_settings_destroy(settings);
-        return 0;
-    }
-    bus_init(bus);
-
     // Create core managers
+    SettingsManager *settings = sm_settings_create();
+    EventBus *bus = malloc(sizeof(EventBus));
     StateManager *sm = sm_create(gh->ren, win_w, win_h, get_font_path());
     InputManager *im = input_create();
     AudioManager *am = am_create(10); // 10 is the max number of audios
 
-    if (!sm || !im || !am) {
+    if (!sm || !im || !am || !settings || !bus) {
         LOG_ERROR("Failed to create game subsystems\n");
-        if (bus) {
-            bus_destroy(bus);
-            free(bus);
-        }
-        if (settings) sm_settings_destroy(settings);
         return 0;
     }
+
+    // Initialize services
+    initialize_default_settings(settings);
+    bus_init(bus);
 
     // Register services
     svc_register(gh->services, INPUT_SERVICE, im);

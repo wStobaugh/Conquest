@@ -46,9 +46,6 @@ struct SettingsManager {
     char* settings_file;
 };
 
-/* Static singleton instance */
-static SettingsManager* s_instance = NULL;
-
 /* Helper functions */
 static Category* find_category(SettingsManager* sm, const char* category) {
     for (int i = 0; i < sm->category_count; i++) {
@@ -86,19 +83,14 @@ static char* strdup_safe(const char* str) {
     return result;
 }
 
-/* Create the settings manager singleton */
+/* Create a new settings manager */
 SettingsManager* sm_settings_create(void) {
-    if (s_instance) {
-        return s_instance; // Return existing instance
-    }
-    
     SettingsManager* sm = (SettingsManager*)calloc(1, sizeof(SettingsManager));
     if (!sm) {
         LOG_ERROR("Failed to allocate settings manager\n");
         return NULL;
     }
     
-    s_instance = sm;
     return sm;
 }
 
@@ -131,11 +123,6 @@ void sm_settings_destroy(SettingsManager* sm) {
     }
     
     free(sm->settings_file);
-    
-    if (sm == s_instance) {
-        s_instance = NULL;
-    }
-    
     free(sm);
 }
 
