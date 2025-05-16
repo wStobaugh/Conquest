@@ -3,6 +3,7 @@
         "initialization.h": "c",
         "math.h": "c",
         "service_manager.h": "c",
-        "settings_manager.h": "c"
+        "settings_manager.h": "c",
+        "resource_paths.h": "c"
     }
 }

@@ -76,10 +76,10 @@ static void sm_handle_menu_signals(const Event *e) {
 }
 
 // Update sm_create to accept resource manager parameter
-StateManager *sm_create(SDL_Renderer *ren, int w, int h, const char *font_path, ResourceManager *resource_manager) {
+StateManager *sm_create(SDL_Renderer *ren, int w, int h, ResourceManager *resource_manager) {
     StateManager *sm = calloc(1, sizeof *sm);
     sm->state = GS_MENU;
-    sm->menu = menu_create(ren, w, h, font_path, NULL, resource_manager);
+    sm->menu = menu_create(ren, w, h, NULL, resource_manager);
     
     // Store the instance globally
     g_sm_instance = sm;

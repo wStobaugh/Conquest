@@ -31,7 +31,7 @@ int initialize_core_services(GameHandle *gh) {
     SettingsManager *settings = sm_settings_create();
     EventBus *bus = malloc(sizeof(EventBus));
     ResourceManager *resource_manager = resource_manager_create();
-    StateManager *sm = sm_create(gh->ren, win_w, win_h, get_font_path(), resource_manager);
+    StateManager *sm = sm_create(gh->ren, win_w, win_h, resource_manager);
     InputManager *im = input_create();
     AudioManager *am = am_create(10); // 10 is the max number of audios
 
@@ -67,6 +67,8 @@ int initialize_core_services(GameHandle *gh) {
 // Runs one iteration of the game loop
 void game_loop(GameHandle *gh) {
 
+    // TODO: Wonder if there is a way to have
+    // Access to the services without requesting them every loop?
     InputManager *im = svc_get(gh->services, INPUT_SERVICE);
     StateManager *sm = svc_get(gh->services, STATE_MANAGER_SERVICE);
 

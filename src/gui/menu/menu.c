@@ -57,7 +57,7 @@ void menu_set_event_bus(Menu *m, EventBus *bus) {
     m->event_bus = bus;
 }
 
-Menu *menu_create(SDL_Renderer *ren, int w, int h, const char *font_path, 
+Menu *menu_create(SDL_Renderer *ren, int w, int h, 
                  AudioManager *audio_manager, ResourceManager *resource_manager) {
     Menu *m = calloc(1, sizeof *m);
     m->ren = ren;
@@ -65,20 +65,35 @@ Menu *menu_create(SDL_Renderer *ren, int w, int h, const char *font_path,
     m->win_h = h;
     m->off_x = 0;
     m->off_y = h / 5; /* 10% offset for title */
-    m->title_font = TTF_OpenFont(font_path, 64);
-    m->font = TTF_OpenFont(font_path, 28);
+    
+    // Load fonts using the resource manager and proper resource paths
+    if (resource_manager) {
+        // Use the resource paths function to get the full path
+        m->title_font = load_font(resource_manager, "OpenSans-Regular.ttf", 64);
+        m->font = load_font(resource_manager, "OpenSans-Regular.ttf", 28);
+    } else {
+        SDL_Log("Warning: No resource manager provided to menu. Using default fonts.");
+        m->title_font = NULL;
+        m->font = NULL;
+    }
+    
     m->audio_manager = audio_manager;
     m->resource_manager = resource_manager;
     m->last_signal = MENU_SIGNAL_NONE;
     
-    SDL_Surface *s = TTF_RenderUTF8_Solid(m->title_font, "CONQUEST",
-                                          (SDL_Color){255, 255, 255, 255});
-    m->title_tex = SDL_CreateTextureFromSurface(ren, s);
-    SDL_FreeSurface(s);
+    if (m->title_font) {
+        SDL_Surface *s = TTF_RenderUTF8_Solid(m->title_font, "CONQUEST",
+                                            (SDL_Color){255, 255, 255, 255});
+        m->title_tex = SDL_CreateTextureFromSurface(ren, s);
+        SDL_FreeSurface(s);
+    } else {
+        m->title_tex = NULL;
+        SDL_Log("Error: Failed to create title texture due to missing font");
+    }
     
-    // Use resource manager to load the background texture
+    // Use resource manager to load the background texture with proper path
     if (m->resource_manager) {
-        m->bg_tex = load_texture(resource_manager, "resources/images/ui/main_bg.png", ren);
+            m->bg_tex = load_texture(resource_manager, "ui/main_bg.png", ren);
     } else {
         SDL_Log("Warning: No resource manager provided to menu. Background texture won't be loaded.");
         m->bg_tex = NULL;

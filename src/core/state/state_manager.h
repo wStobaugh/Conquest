@@ -13,7 +13,7 @@ typedef struct StateManager {
   ServiceManager *services;
 } StateManager;
 
-StateManager *sm_create(SDL_Renderer *ren, int w, int h, const char *font_path, ResourceManager *resource_manager);
+StateManager *sm_create(SDL_Renderer *ren, int w, int h, ResourceManager *resource_manager);
 void sm_render(StateManager *sm, SDL_Renderer *ren);
 void sm_destroy(StateManager *sm);
 

@@ -2,7 +2,7 @@
 #define RESOURCE_PATHS_H
 
 /* Get the path to a font resource */
-const char *get_font_path(void);
+const char *get_font_path(const char *file);
 
 /* Get the path to a music resource */
 const char *get_music_path(const char *file);

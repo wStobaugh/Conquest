@@ -2,11 +2,11 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 
-const char *get_font_path(void) {
+const char *get_font_path(const char *file) {
     char *base = SDL_GetBasePath();
     static char buf[1024];
-    snprintf(buf, sizeof buf, "%sresources/fonts/OpenSans-Regular.ttf",
-             base ? base : "");
+    snprintf(buf, sizeof buf, "%sresources/fonts/%s", base ? base : "",
+             file);
     SDL_free(base);
     return buf;
 }

@@ -41,8 +41,7 @@ typedef enum {
 } MenuScreenID;
 
 /* lifecycle */
-Menu *menu_create(SDL_Renderer *ren, int win_w, int win_h,
-                  const char *font_path, struct AudioManager *audio_manager, ResourceManager *resource_manager);
+Menu *menu_create(SDL_Renderer *ren, int win_w, int win_h, struct AudioManager *audio_manager, ResourceManager *resource_manager);
 void menu_destroy(Menu *m);
 
 /* frame */
