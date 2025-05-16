@@ -3,6 +3,7 @@
 #include "../../gui/menu/menu.h"
 #include <SDL2/SDL.h>
 #include "../services/service_manager.h"
+#include "../resources/resource_manager.h"
 
 enum GameState { GS_MENU, GS_PLAY, GS_QUIT, GS_PAUSE };
 
@@ -12,7 +13,7 @@ typedef struct StateManager {
   ServiceManager *services;
 } StateManager;
 
-StateManager *sm_create(SDL_Renderer *ren, int w, int h, const char *font_path);
+StateManager *sm_create(SDL_Renderer *ren, int w, int h, const char *font_path, ResourceManager *resource_manager);
 void sm_render(StateManager *sm, SDL_Renderer *ren);
 void sm_destroy(StateManager *sm);
 

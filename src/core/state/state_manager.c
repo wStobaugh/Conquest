@@ -3,6 +3,7 @@
 #include "../audio/audio_manager.h"
 #include "../settings/settings_manager.h"
 #include "../resources/resource_paths.h"
+#include "../resources/resource_manager.h"
 #include "../../utils/log.h"
 #include <string.h>
 #include "../event/event_bus.h"
@@ -74,11 +75,11 @@ static void sm_handle_menu_signals(const Event *e) {
     }
 }
 
-// Update sm_create to set the instance
-StateManager *sm_create(SDL_Renderer *ren, int w, int h, const char *font_path) {
+// Update sm_create to accept resource manager parameter
+StateManager *sm_create(SDL_Renderer *ren, int w, int h, const char *font_path, ResourceManager *resource_manager) {
     StateManager *sm = calloc(1, sizeof *sm);
     sm->state = GS_MENU;
-    sm->menu = menu_create(ren, w, h, font_path, NULL);
+    sm->menu = menu_create(ren, w, h, font_path, NULL, resource_manager);
     
     // Store the instance globally
     g_sm_instance = sm;

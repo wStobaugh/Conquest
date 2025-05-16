@@ -8,7 +8,8 @@ typedef enum {
     STATE_MANAGER_SERVICE,
     AUDIO_SERVICE,
     SETTINGS_MANAGER_SERVICE,
-    EVENT_BUS_SERVICE
+    EVENT_BUS_SERVICE,
+    RESOURCE_MANAGER_SERVICE
 } ServiceType;
 
 /* Opaque handle */

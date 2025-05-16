@@ -56,7 +56,9 @@ int main(int argc, char **argv) {
 
     // Target FPS: 60
     Uint32 target_ms = 1000 / 60;
-    while (gh->running) {
+    // Get the state manager to check for GS_QUIT state
+    StateManager *sm = svc_get(gh->services, STATE_MANAGER_SERVICE);
+    while (sm && sm->state != GS_QUIT) {
         Uint32 frame_start = SDL_GetTicks();
 
         game_loop(gh);

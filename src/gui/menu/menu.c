@@ -2,6 +2,7 @@
 #include "../../core/input/input_manager.h"
 #include "../../core/audio/audio_manager.h"
 #include "../../core/resources/resource_paths.h"
+#include "../../core/resources/resource_manager.h"
 #include "../../utils/math_utils.h"
 #include "../../core/services/service_manager.h"
 #include "../../utils/log.h"
@@ -10,13 +11,6 @@
 /*--------------------------------------------------------------------------*/
 /* Helpers                                                                 */
 /*--------------------------------------------------------------------------*/
-
-static SDL_Texture *load_texture(SDL_Renderer *ren, const char *p) {
-    SDL_Texture *t = IMG_LoadTexture(ren, p);
-    if (!t)
-        SDL_Log("IMG_LoadTexture(%s):%s", p, IMG_GetError());
-    return t;
-}
 
 void menu_clear_buttons(Menu *m) {
     for (int i = 0; i < m->btn_count; i++)
@@ -63,7 +57,8 @@ void menu_set_event_bus(Menu *m, EventBus *bus) {
     m->event_bus = bus;
 }
 
-Menu *menu_create(SDL_Renderer *ren, int w, int h, const char *font_path, AudioManager *audio_manager) {
+Menu *menu_create(SDL_Renderer *ren, int w, int h, const char *font_path, 
+                 AudioManager *audio_manager, ResourceManager *resource_manager) {
     Menu *m = calloc(1, sizeof *m);
     m->ren = ren;
     m->win_w = w;
@@ -73,12 +68,22 @@ Menu *menu_create(SDL_Renderer *ren, int w, int h, const char *font_path, AudioM
     m->title_font = TTF_OpenFont(font_path, 64);
     m->font = TTF_OpenFont(font_path, 28);
     m->audio_manager = audio_manager;
+    m->resource_manager = resource_manager;
     m->last_signal = MENU_SIGNAL_NONE;
+    
     SDL_Surface *s = TTF_RenderUTF8_Solid(m->title_font, "CONQUEST",
                                           (SDL_Color){255, 255, 255, 255});
     m->title_tex = SDL_CreateTextureFromSurface(ren, s);
     SDL_FreeSurface(s);
-    m->bg_tex = load_texture(ren, "resources/images/ui/main_bg.png");
+    
+    // Use resource manager to load the background texture
+    if (m->resource_manager) {
+        m->bg_tex = load_texture(resource_manager, "resources/images/ui/main_bg.png", ren);
+    } else {
+        SDL_Log("Warning: No resource manager provided to menu. Background texture won't be loaded.");
+        m->bg_tex = NULL;
+    }
+    
     menu_build_main(m);
     return m;
 }

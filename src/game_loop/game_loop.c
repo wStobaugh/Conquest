@@ -16,6 +16,7 @@ This file is part of the game engine project.
 #include "../utils/log.h"
 #include <SDL2/SDL.h>
 #include <string.h>
+#include "../core/resources/resource_manager.h"
 #include "../core/event/event_bus.h"
 #include "../core/event/event_signals.h"
 
@@ -29,7 +30,8 @@ int initialize_core_services(GameHandle *gh) {
     // Create core managers
     SettingsManager *settings = sm_settings_create();
     EventBus *bus = malloc(sizeof(EventBus));
-    StateManager *sm = sm_create(gh->ren, win_w, win_h, get_font_path());
+    ResourceManager *resource_manager = resource_manager_create();
+    StateManager *sm = sm_create(gh->ren, win_w, win_h, get_font_path(), resource_manager);
     InputManager *im = input_create();
     AudioManager *am = am_create(10); // 10 is the max number of audios
 
@@ -48,6 +50,7 @@ int initialize_core_services(GameHandle *gh) {
     svc_register(gh->services, AUDIO_SERVICE, am);
     svc_register(gh->services, SETTINGS_MANAGER_SERVICE, settings);
     svc_register(gh->services, EVENT_BUS_SERVICE, bus);
+    svc_register(gh->services, RESOURCE_MANAGER_SERVICE, resource_manager);
 
     // Set the services for the state manager
     sm_set_services(sm, gh->services);
@@ -74,7 +77,7 @@ void game_loop(GameHandle *gh) {
 
     /* global hot-keys */
     if (input_pressed(im, ACTION_QUIT))
-        gh->running = 0;
+        sm->state = GS_QUIT;
 
     // Iterate through the computation stack and execute each layer
     comp_stack_execute(gh->stack, gh);

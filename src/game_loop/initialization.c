@@ -79,7 +79,6 @@ GameHandle *game_init(void) {
     gh->services = svc_create();
     gh->stack = malloc(sizeof(ComputationStack));
     comp_stack_init(gh->stack);
-    gh->running = 1;
 
 
     // Initialise cursor module (ignore return but log if needed)

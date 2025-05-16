@@ -4,6 +4,7 @@
 #include "../widgets/button.h"
 #include "menu_items.h"
 #include "../../core/event/event_bus.h"
+#include "../../core/resources/resource_manager.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -28,6 +29,7 @@ typedef struct Menu {
   MenuSignal last_signal;
   EventBus *event_bus; // Reference to the event bus
   struct AudioManager *audio_manager; // Reference to the audio manager
+  ResourceManager *resource_manager; // Reference to the resource manager
 } Menu;
 
 typedef enum {
@@ -40,7 +42,7 @@ typedef enum {
 
 /* lifecycle */
 Menu *menu_create(SDL_Renderer *ren, int win_w, int win_h,
-                  const char *font_path, struct AudioManager *audio_manager);
+                  const char *font_path, struct AudioManager *audio_manager, ResourceManager *resource_manager);
 void menu_destroy(Menu *m);
 
 /* frame */
