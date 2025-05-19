@@ -51,6 +51,12 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // Initialize cursor module after core services are ready
+    ResourceManager *rm = svc_get(gh->services, RESOURCE_MANAGER_SERVICE);
+    if (cursor_init(rm) != 0) {
+        LOG_INFO("cursor_init() failed – using default system cursor");
+    }
+
     // Register computation layers
     register_standard_layers(gh);
 

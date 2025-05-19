@@ -1,6 +1,7 @@
 #ifndef CONQUEST_CURSOR_H
 #define CONQUEST_CURSOR_H
 #include <SDL2/SDL.h>
+#include "../resources/resource_manager.h"
 
 typedef enum {
     CURSOR_NORMAL,
@@ -8,7 +9,7 @@ typedef enum {
 } CursorType;
 
 /* returns 0 on success, -1 on error (check SDL/IMG logs) */
-int  cursor_init(void);          /* call once at startup          */
+int cursor_init(ResourceManager *manager);        /* call once at startup          */
 void cursor_set(CursorType t);   /* swap between the two skins    */
 void cursor_cleanup(void);       /* call once before SDL_Quit()   */
 #endif

@@ -10,16 +10,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-// Set mouse image
-static const char *mouse_path() {
-    char *base = SDL_GetBasePath();
-    static char buf[1024];
-    snprintf(buf, sizeof buf, "%sresources/images/ui/cursor_normal.png",
-             base ? base : "");
-    SDL_free(base);
-    return buf;
-}
-
 static void SDL_CheckErrors() {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         SDL_Log("SDL_Init: %s", SDL_GetError());
@@ -79,11 +69,7 @@ GameHandle *game_init(void) {
     gh->services = svc_create();
     gh->stack = malloc(sizeof(ComputationStack));
     comp_stack_init(gh->stack);
-
-
-    // Initialise cursor module (ignore return but log if needed)
-    if (cursor_init() != 0)
-        SDL_Log("cursor_init() failed – using default system cursor");
+    initialize_event_bus(gh);
 
     return gh;
 }

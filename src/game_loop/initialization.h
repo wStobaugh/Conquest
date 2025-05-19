@@ -3,4 +3,5 @@
 #include "../utils/game_structs.h"
 
 GameHandle *game_init();
+int initialize_event_bus(GameHandle *gh);
 #endif // GAME_LOOP_INITIALIZATION_H
