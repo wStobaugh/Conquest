@@ -41,8 +41,6 @@ void clock_service_update(ClockService *clock) {
     if (frame_time < clock->target_frame_time) {
         SDL_Delay((Uint32)(clock->target_frame_time - frame_time));
     }
-    // print the FPS
-    printf("FPS: %f\n", 1.0f / clock->delta_time);
 }
 
 // Delete the clock service
