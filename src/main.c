@@ -51,28 +51,13 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Initialize cursor module after core services are ready
-    ResourceManager *rm = svc_get(gh->services, RESOURCE_MANAGER_SERVICE);
-    if (cursor_init(rm) != 0) {
-        LOG_INFO("cursor_init() failed – using default system cursor");
-    }
-
     // Register computation layers
     register_standard_layers(gh);
 
-    // Target FPS: 60
-    Uint32 target_ms = 1000 / 60;
     // Get the state manager to check for GS_QUIT state
     StateManager *sm = svc_get(gh->services, STATE_MANAGER_SERVICE);
     while (sm && sm->state != GS_QUIT) {
-        Uint32 frame_start = SDL_GetTicks();
-
         game_loop(gh);
-
-        /* fps cap … */
-        Uint32 dt = SDL_GetTicks() - frame_start;
-        if (dt < target_ms)
-            SDL_Delay(target_ms - dt);
     }
 
     /* Shutdown all game systems */

@@ -3,6 +3,12 @@
 
 #include "../../utils/game_structs.h"
 
+/* Layer priority constants */
+#define LAYER_PRIORITY_PRESENT 0      /* Present frame and update input */
+#define LAYER_PRIORITY_CLOCK 0        /* Update game clock */
+#define LAYER_PRIORITY_RENDER 100     /* Render game state */
+#define LAYER_PRIORITY_INPUT 300      /* Handle input processing */
+
 /* Layer for handling input in the state manager */
 void layer_state_input(GameHandle *gh);
 

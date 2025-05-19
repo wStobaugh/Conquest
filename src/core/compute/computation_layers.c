@@ -3,6 +3,7 @@
 #include "../input/input_manager.h"
 #include "../services/service_manager.h"
 #include "../state/state_manager.h"
+#include "../clock/clock_service.h"
 #include <SDL2/SDL.h>
 
 void layer_state_input(GameHandle *gh) {
@@ -22,8 +23,14 @@ void layer_present(GameHandle *gh) {
     input_update(im);
 }
 
+void layer_clock_update(GameHandle *gh) {
+    ClockService *clock = svc_get(gh->services, CLOCK_SERVICE);
+    clock_service_update(clock);
+}
+
 void register_standard_layers(GameHandle *gh) {
-    push_layer(gh, "sm_input", layer_state_input, 300);
-    push_layer(gh, "sm_render", layer_state_render, 100);
-    push_layer(gh, "present", layer_present, 0);
+    push_layer(gh, "clock_update", layer_clock_update, LAYER_PRIORITY_CLOCK);
+    push_layer(gh, "sm_input", layer_state_input, LAYER_PRIORITY_INPUT);
+    push_layer(gh, "sm_render", layer_state_render, LAYER_PRIORITY_RENDER);
+    push_layer(gh, "present", layer_present, LAYER_PRIORITY_PRESENT);
 } 

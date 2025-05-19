@@ -5,6 +5,7 @@
         "service_manager.h": "c",
         "settings_manager.h": "c",
         "resource_paths.h": "c",
-        "game_structs.h": "c"
+        "game_structs.h": "c",
+        "clock_service.h": "c"
     }
 }
