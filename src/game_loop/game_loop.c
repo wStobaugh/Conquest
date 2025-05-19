@@ -19,7 +19,8 @@ This file is part of the game engine project.
 #include "../core/resources/resource_manager.h"
 #include "../core/event/event_bus.h"
 #include "../core/event/event_signals.h"
-
+#include "../core/cursor/cursor.h"
+#include "../core/clock/clock_service.h"
 
 // Initialize core game services and register them with the service manager
 int initialize_core_services(GameHandle *gh) {
@@ -34,15 +35,22 @@ int initialize_core_services(GameHandle *gh) {
     StateManager *sm = sm_create(gh->ren, win_w, win_h, resource_manager);
     InputManager *im = input_create();
     AudioManager *am = am_create(10); // 10 is the max number of audios
+    ClockService *clock = clock_service_init();
 
     if (!sm || !im || !am || !settings || !bus) {
         LOG_ERROR("Failed to create game subsystems\n");
         return 0;
     }
 
+    // Initialize cursor module after core services are ready
+    if (cursor_init(resource_manager) != 0) {
+        LOG_INFO("cursor_init() failed – using default system cursor");
+    }
+
     // Initialize services
     initialize_default_settings(settings);
     bus_init(bus);
+    
 
     // Register services
     svc_register(gh->services, INPUT_SERVICE, im);
@@ -51,7 +59,8 @@ int initialize_core_services(GameHandle *gh) {
     svc_register(gh->services, SETTINGS_MANAGER_SERVICE, settings);
     svc_register(gh->services, EVENT_BUS_SERVICE, bus);
     svc_register(gh->services, RESOURCE_MANAGER_SERVICE, resource_manager);
-
+    svc_register(gh->services, CLOCK_SERVICE, clock);
+    
     // Set the services for the state manager
     sm_set_services(sm, gh->services);
     
