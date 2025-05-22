@@ -12,6 +12,7 @@
 #include "core/services/service_manager.h"
 #include "core/settings/settings_manager.h"
 #include "core/settings/default_settings.h"
+#include "core/render/render_service.h"
 #include "core/state/state_manager.h"
 #include "game_loop/game_loop.h"
 #include "game_loop/initialization.h"
@@ -103,15 +104,15 @@ void game_shutdown(GameHandle *gh) {
             sm_settings_destroy(settings);
         }
 
+        /* Get and clean up render service */
+        RenderService *renderer = svc_get(gh->services, RENDER_SERVICE);
+        if (renderer) {
+            renderer_shutdown(renderer);
+        }
+
         /* Destroy the service manager itself */
         svc_destroy(gh->services);
     }
-
-    /* Clean up SDL resources */
-    if (gh->ren)
-        SDL_DestroyRenderer(gh->ren);
-    if (gh->win)
-        SDL_DestroyWindow(gh->win);
 
     /* Shutdown SDL subsystems */
     TTF_Quit();

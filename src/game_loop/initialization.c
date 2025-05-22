@@ -48,15 +48,6 @@ GameHandle *game_init(void) {
     chdir(base);
     SDL_free(base);
 
-    // 1) Create a borderless fullscreen-desktop window (size args are ignored)
-    SDL_Window *win = SDL_CreateWindow(
-        "Conquest", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
-
-    // 2) Create the renderer
-    SDL_Renderer *ren = SDL_CreateRenderer(
-        win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-
     /* allocate and populate the handle */
     GameHandle *gh = malloc(sizeof *gh);
     if (!gh) {
@@ -64,8 +55,6 @@ GameHandle *game_init(void) {
         return NULL;
     }
 
-    gh->win = win;
-    gh->ren = ren;
     gh->services = svc_create();
     gh->stack = malloc(sizeof(ComputationStack));
     comp_stack_init(gh->stack);

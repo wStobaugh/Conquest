@@ -21,23 +21,36 @@ This file is part of the game engine project.
 #include "../core/event/event_signals.h"
 #include "../core/cursor/cursor.h"
 #include "../core/clock/clock_service.h"
+#include "../core/render/render_service.h"
 
 // Initialize core game services and register them with the service manager
 int initialize_core_services(GameHandle *gh) {
+    
+
+    // 1) Create a borderless fullscreen-desktop window (size args are ignored)
+    SDL_Window *win = SDL_CreateWindow(
+        "Conquest", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0,
+        SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
+
+    // 2) Create the renderer
+    SDL_Renderer *ren = SDL_CreateRenderer(
+        win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
     // Get window dimensions
     int win_w, win_h;
-    SDL_GetWindowSize(gh->win, &win_w, &win_h);
+    SDL_GetWindowSize(win, &win_w, &win_h);
 
     // Create core managers
+    RenderService *renderer = renderer_init(ren, win);
     SettingsManager *settings = sm_settings_create();
     EventBus *bus = malloc(sizeof(EventBus));
     ResourceManager *resource_manager = resource_manager_create();
-    StateManager *sm = sm_create(gh->ren, win_w, win_h, resource_manager);
+    StateManager *sm = sm_create(ren, win_w, win_h, resource_manager);
     InputManager *im = input_create();
     AudioManager *am = am_create(10); // 10 is the max number of audios
     ClockService *clock = clock_service_init();
-
-    if (!sm || !im || !am || !settings || !bus) {
+    
+    if (!sm || !im || !am || !settings || !bus || !renderer) {
         LOG_ERROR("Failed to create game subsystems\n");
         return 0;
     }
@@ -51,7 +64,6 @@ int initialize_core_services(GameHandle *gh) {
     initialize_default_settings(settings);
     bus_init(bus);
     
-
     // Register services
     svc_register(gh->services, INPUT_SERVICE, im);
     svc_register(gh->services, STATE_MANAGER_SERVICE, sm);
@@ -60,9 +72,13 @@ int initialize_core_services(GameHandle *gh) {
     svc_register(gh->services, EVENT_BUS_SERVICE, bus);
     svc_register(gh->services, RESOURCE_MANAGER_SERVICE, resource_manager);
     svc_register(gh->services, CLOCK_SERVICE, clock);
+    svc_register(gh->services, RENDER_SERVICE, renderer);
     
     // Set the services for the state manager
     sm_set_services(sm, gh->services);
+
+    // Enter the menu state
+    sm_enter(sm, GS_MENU);
     
     // Set the audio manager for the state manager's menu
     sm_set_audio_manager(sm, am);

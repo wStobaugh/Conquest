@@ -9,6 +9,7 @@
 #define LAYER_PRIORITY_RENDER 100     /* Render game state */
 #define LAYER_PRIORITY_INPUT 300      /* Handle input processing */
 
+
 /* Layer for handling input in the state manager */
 void layer_state_input(GameHandle *gh);
 

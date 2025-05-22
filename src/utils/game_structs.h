@@ -23,8 +23,6 @@ typedef struct ComputationStack {
 
 // Handle to the game
 typedef struct GameHandle {
-    SDL_Window *win;   // Window handle
-    SDL_Renderer *ren; // Renderer handle
     ComputationStack *stack; // Stack of computation layers
     struct ServiceManager *services; // Service manager handle
     int running; // Flag to indicate if the game is running

@@ -7,6 +7,7 @@
 #include "../../core/services/service_manager.h"
 #include "../../utils/log.h"
 #include "../../core/event/event_signals.h"
+#include "../../core/render/render_service.h"
 #include <stdio.h>
 /*--------------------------------------------------------------------------*/
 /* Helpers                                                                 */
