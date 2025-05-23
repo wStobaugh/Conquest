@@ -8,6 +8,7 @@ This file is part of the game engine project.
 #include "../core/input/input_manager.h"
 #include "../core/services/service_manager.h"
 #include "../core/state/state_manager.h"
+#include "../core/state/state_functions/state_functions.h"
 #include "../core/audio/audio_manager.h"
 #include "../core/settings/settings_manager.h"
 #include "../core/settings/default_settings.h"
@@ -104,7 +105,7 @@ void game_loop(GameHandle *gh) {
 
     /* global hot-keys */
     if (input_pressed(im, ACTION_QUIT))
-        sm->state = GS_QUIT;
+        sm->current_state = get_state_object(sm->states, GS_QUIT);
 
     // Iterate through the computation stack and execute each layer
     comp_stack_execute(gh->stack, gh);

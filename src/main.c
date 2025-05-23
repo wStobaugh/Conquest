@@ -14,6 +14,7 @@
 #include "core/settings/default_settings.h"
 #include "core/render/render_service.h"
 #include "core/state/state_manager.h"
+#include "core/state/state_functions/state_functions.h"
 #include "game_loop/game_loop.h"
 #include "game_loop/initialization.h"
 #include "utils/game_structs.h"
@@ -57,7 +58,7 @@ int main(int argc, char **argv) {
 
     // Get the state manager to check for GS_QUIT state
     StateManager *sm = svc_get(gh->services, STATE_MANAGER_SERVICE);
-    while (sm && sm->state != GS_QUIT) {
+    while (sm && sm->current_state->type != GS_QUIT) {
         game_loop(gh);
     }
 

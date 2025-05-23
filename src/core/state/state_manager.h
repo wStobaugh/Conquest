@@ -5,16 +5,19 @@
 #include "../services/service_manager.h"
 #include "../resources/resource_manager.h"
 #include "../render/render_service.h"
-
+#include "state_functions/state_functions.h"
 // forward declarations
 struct RenderService;
-
-enum GameState { GS_MENU, GS_PLAY, GS_QUIT, GS_PAUSE };
+struct StateVTable;
+enum GameState;
+struct GameStates;
+struct GameStateObject;
 
 typedef struct StateManager {
-  enum GameState state;
   Menu *menu;
   ServiceManager *services;
+  GameStates *states;
+  GameStateObject *current_state;
 } StateManager;
 
 StateManager *sm_create(SDL_Renderer *ren, int w, int h, ResourceManager *resource_manager);

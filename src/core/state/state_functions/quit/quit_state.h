@@ -1,0 +1,1 @@
+void quit_state_enter(void *user_data);
