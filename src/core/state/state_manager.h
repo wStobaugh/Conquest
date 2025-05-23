@@ -4,17 +4,23 @@
 #include <SDL2/SDL.h>
 #include "../services/service_manager.h"
 #include "../resources/resource_manager.h"
-
-enum GameState { GS_MENU, GS_PLAY, GS_QUIT, GS_PAUSE };
+#include "../render/render_service.h"
+#include "state_functions/state_functions.h"
+// forward declarations
+struct RenderService;
+struct StateVTable;
+enum GameState;
+struct GameStates;
+struct GameStateObject;
 
 typedef struct StateManager {
-  enum GameState state;
   Menu *menu;
   ServiceManager *services;
+  GameStates *states;
+  GameStateObject *current_state;
 } StateManager;
 
 StateManager *sm_create(SDL_Renderer *ren, int w, int h, ResourceManager *resource_manager);
-void sm_render(StateManager *sm, SDL_Renderer *ren);
 void sm_destroy(StateManager *sm);
 
 struct InputManager;                       /* forward-declare */
@@ -32,5 +38,8 @@ void sm_set_audio_manager(StateManager *sm, struct AudioManager *am);
 
 // Add this function declaration
 void sm_set_services(StateManager *sm, ServiceManager *services);
+
+// State transition function
+void sm_enter(StateManager *sm, enum GameState new_state);
 
 #endif // CONQUEST_STATE_MANAGER_H

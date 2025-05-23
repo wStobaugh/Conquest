@@ -1,3 +1,6 @@
+/* -------------------------------------------------------------------------
+ *  Conquest – State Manager
+ * ---------------------------------------------------------------------- */
 #include "state_manager.h"
 #include "../input/input_manager.h"
 #include "../audio/audio_manager.h"
@@ -5,148 +8,130 @@
 #include "../resources/resource_paths.h"
 #include "../resources/resource_manager.h"
 #include "../../utils/log.h"
-#include <string.h>
 #include "../event/event_bus.h"
 #include "../event/event_signals.h"
 #include "../services/service_manager.h"
+#include "../render/render_service.h"
+#include "state_functions/state_functions.h"
+#include <string.h>
 
-// At the top of the file, add a static global instance
-static StateManager* g_sm_instance = NULL;
+/* ---------------------------------------------------------------------- */
+/*  Global pointer so async listeners can reach the current state manager */
+/* ---------------------------------------------------------------------- */
+static StateManager *g_sm_instance = NULL;
+StateManager *sm_get_instance(void) { return g_sm_instance; }
 
-// Add this function to implement sm_get_instance
-StateManager* sm_get_instance(void) {
-    return g_sm_instance;
-}
-
-// Initialize menu background music
-void sm_initialize_menu_music(StateManager *sm, AudioManager *am, SettingsManager *settings) {
+/* ---------------------------------------------------------------------- */
+/*  Menu background music helper (unchanged)                              */
+/* ---------------------------------------------------------------------- */
+void sm_initialize_menu_music(StateManager *sm,
+                              AudioManager *am,
+                              SettingsManager *settings)
+{
     if (!am || !settings) {
-        LOG_ERROR("Cannot initialize menu music: audio manager or settings manager is NULL\n");
+        LOG_ERROR("Cannot initialize menu music – missing managers\n");
         return;
     }
 
-    // Apply settings to the music volume
-    float music_volume = sm_get_float(settings, "music_volume");
-    float master_volume = sm_get_float(settings, "master_volume");
-    int sdl_volume = (int)(music_volume * master_volume * 128.0f);
-    
-    // Create and play background music
-    Audio *bg = audio_create(get_music_path("Music_1.mp3"), MUSIC, sdl_volume, 1);
-    if (bg) {
-        am_register(am, bg);
-        am_play(am, bg);
-    } else {
-        LOG_ERROR("Failed to create menu background music\n");
+    float music_v  = sm_get_float(settings, "music_volume");
+    float master_v = sm_get_float(settings, "master_volume");
+    int   vol      = (int)(music_v * master_v * 128.0f);
+
+    Audio *bg = audio_create(get_music_path("Music_1.mp3"), MUSIC, vol, 1);
+    if (!bg || am_register(am, bg) == -1) {
+        LOG_ERROR("Failed to create/register menu BGM\n");
+        return;
     }
+    am_play(am, bg);
 }
 
-// Event handler for menu signals
-static void sm_handle_menu_signals(const Event *e) {
-    if (e->type != EVENT_TYPE_SIGNAL || !e->data)
-        return;
-        
-    MenuSignal signal = *(MenuSignal*)e->data;
-    
-    // Free the allocated memory
+/* ---------------------------------------------------------------------- */
+/*  Event-bus listener (unchanged)                                        */
+/* ---------------------------------------------------------------------- */
+static void sm_handle_menu_signals(const Event *e)
+{
+    if (e->type != EVENT_TYPE_SIGNAL || !e->data) return;
+
+    MenuSignal sig = *(MenuSignal *)e->data;
     free(e->data);
-    
-    // Get the state manager instance
+
     StateManager *sm = g_sm_instance;
     if (!sm) return;
-    
-    switch (signal) {
+
+    switch (sig) {
         case MENU_SIGNAL_GOTO_CONTINUE:
-            sm->state = GS_PLAY; // Load saved game
-            break;
-        case MENU_SIGNAL_GOTO_NEW_GAME:
-            sm->state = GS_PLAY; // Create new game
-            break;
-        case MENU_SIGNAL_GOTO_OPTIONS:
-            // Show options menu (handled by menu system)
-            break;
-        case MENU_SIGNAL_GOTO_QUIT:
-            sm->state = GS_QUIT;
-            break;
-        case MENU_SIGNAL_GOTO_MAIN:
-            // Return to main menu (handled by menu system)
-            break;
-        default:
-            break;
+        case MENU_SIGNAL_GOTO_NEW_GAME:  sm_enter(sm, GS_PLAY); break;
+        case MENU_SIGNAL_GOTO_OPTIONS:   /* handled inside menu */       break;
+        case MENU_SIGNAL_GOTO_QUIT:      sm_enter(sm, GS_QUIT); break;
+        case MENU_SIGNAL_GOTO_MAIN:      sm_enter(sm, GS_MENU); break;
+        default: break;
     }
 }
 
-// Update sm_create to accept resource manager parameter
-StateManager *sm_create(SDL_Renderer *ren, int w, int h, ResourceManager *resource_manager) {
+/* ---------------------------------------------------------------------- */
+/*  Construction / destruction (unchanged)                                */
+/* ---------------------------------------------------------------------- */
+StateManager *sm_create(SDL_Renderer *ren, int w, int h,
+                        ResourceManager *resources)
+{
     StateManager *sm = calloc(1, sizeof *sm);
-    sm->state = GS_MENU;
-    sm->menu = menu_create(ren, w, h, NULL, resource_manager);
+    sm->states = init_game_states();
+    // TODO: GS_PLAY is temp to make the game run
+    // TODO: Get state object instead of type here
+    sm->current_state = get_state_object(sm->states, GS_PLAY);
+    sm->menu   = menu_create(ren, w, h, NULL, resources);
     
-    // Store the instance globally
     g_sm_instance = sm;
-    
-    // If services are already attached, get the event bus
-    if (sm->services) {
-        EventBus *bus = svc_get(sm->services, EVENT_BUS_SERVICE);
-        if (bus) {
-            // Set the event bus for the menu
-            menu_set_event_bus(sm->menu, bus);
-            
-            // Subscribe to menu signal events
-            bus_subscribe(bus, "menu_signals", sm_handle_menu_signals);
-        }
-    }
-    
     return sm;
 }
 
-// Set the audio manager for the state manager's menu
-void sm_set_audio_manager(StateManager *sm, AudioManager *am) {
-    if (!sm || !sm->menu) return;
-    
-    // Update the menu's audio manager
-    sm->menu->audio_manager = am;
-}
+void sm_set_audio_manager(StateManager *sm, AudioManager *am)
+{ if (sm && sm->menu) sm->menu->audio_manager = am; }
 
-// This function renders the current state of the state manager.
-void sm_render(StateManager *sm, SDL_Renderer *ren) {
-    if (sm->state == GS_MENU)
-        menu_render(sm->menu, ren);
-    else if (sm->state == GS_PLAY) {
-        SDL_SetRenderDrawColor(ren, 0, 20, 40, 255);
-        SDL_RenderClear(ren);
+/* ---------------------------------------------------------------------- */
+/*  Public state transition                                               */
+/* ---------------------------------------------------------------------- */
+void sm_enter(StateManager *sm, enum GameState new_state)
+{
+    // if the state is the same, don't do anything
+    if (!sm || sm->current_state->type == new_state) { 
+        LOG_ERROR("State_manager: Can't switch to same state"); 
+        return; 
     }
+    
+    sm->current_state = get_state_object(sm->states, new_state);
+
+    StateVTable *vtable = get_state_vtable(sm->states, new_state);
+    if (!vtable) { LOG_ERROR("State_manager: Can't switch to state with no vtable"); return; }
+
+    vtable->enter(sm);
 }
 
-// This functions handles input events depending on the current state.
-void sm_handle_input(StateManager *sm, const InputManager *im) {
-    if (sm->state == GS_MENU)
+/* ---------------------------------------------------------------------- */
+/*  Per-frame helpers (unchanged)                                         */
+/* ---------------------------------------------------------------------- */
+void sm_handle_input(StateManager *sm, const InputManager *im)
+{
+    if (sm->current_state->type == GS_MENU)
         menu_handle_input(sm->menu, im);
 
-    /* later: add gameplay input here */
-
-    // Pressing ESCAPE in the game state should return to the menu
-    if (sm->state == GS_PLAY && input_pressed(im, ACTION_CANCEL))
-        sm->state = GS_MENU;
+    if (sm->current_state->type == GS_PLAY && input_pressed(im, ACTION_CANCEL))
+        sm_enter(sm, GS_MENU);
 }
 
-// Update sm_destroy to clear the instance
-void sm_destroy(StateManager *sm) {
-    if (!sm)
-        return;
-    if (g_sm_instance == sm)
-        g_sm_instance = NULL;
+void sm_destroy(StateManager *sm)
+{
+    if (!sm) return;
+    if (g_sm_instance == sm) g_sm_instance = NULL;
     menu_destroy(sm->menu);
     free(sm);
 }
 
-// Implement setting services
-void sm_set_services(StateManager *sm, ServiceManager *services) {
-    if (!sm) return;
-    sm->services = services;
-    
-    // Try to get event bus and set up subscriptions
-    EventBus *bus = svc_get(services, EVENT_BUS_SERVICE);
-    if (bus && sm->menu) {
+void sm_set_services(StateManager *sm, ServiceManager *svc)
+{
+    sm->services = svc;
+    EventBus *bus = svc_get(svc, EVENT_BUS_SERVICE);
+    if (bus) {
         menu_set_event_bus(sm->menu, bus);
         bus_subscribe(bus, "menu_signals", sm_handle_menu_signals);
     }

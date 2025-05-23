@@ -10,7 +10,8 @@ typedef enum {
     SETTINGS_MANAGER_SERVICE,
     EVENT_BUS_SERVICE,
     RESOURCE_MANAGER_SERVICE,
-    CLOCK_SERVICE
+    CLOCK_SERVICE,
+    RENDER_SERVICE
 } ServiceType;
 
 /* Opaque handle */
